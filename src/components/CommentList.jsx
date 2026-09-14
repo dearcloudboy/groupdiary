@@ -40,15 +40,47 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
             className="comment-item"
             style={{
               display: 'flex',
-              gap: '0.6rem',
+              gap: '0.7rem',
               alignItems: 'flex-start',
               fontSize: '0.9rem',
               background: 'rgba(0, 0, 0, 0.02)',
-              padding: '0.5rem 0.7rem',
-              borderRadius: '10px',
+              padding: '0.6rem 0.8rem',
+              borderRadius: '12px',
             }}
           >
-            <Avatar member={author} size="small" />
+            {/* 댓글 프사 고정 48px */}
+            <div
+              className="comment-avatar-wrap"
+              style={{
+                width: '48px',
+                height: '48px',
+                minWidth: '48px',
+                minHeight: '48px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <style>{`
+                .comment-avatar-wrap .avatar,
+                .comment-avatar-wrap .avatar img,
+                .comment-avatar-wrap img {
+                  width: 48px !important;
+                  height: 48px !important;
+                  min-width: 48px !important;
+                  min-height: 48px !important;
+                  font-size: 1.2rem !important;
+                  line-height: 48px !important;
+                  object-fit: cover !important;
+                  border-radius: 50% !important;
+                }
+              `}</style>
+              <Avatar member={author} />
+            </div>
+
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{author?.displayName || c.author}</span>
