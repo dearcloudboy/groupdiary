@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getEntry, emptyEntry } from '../lib/dataModel.js'
+import { getEntry } from '../lib/dataModel.js'
 import { DIARY_WORD } from '../config.js'
 import EntryCard from './EntryCard.jsx'
 import EntryEditor from './EntryEditor.jsx'
@@ -11,22 +11,24 @@ export default function DualEntryView({ date, onChanged }) {
   const [slots, setSlots] = useState({})
   const [addingFor, setAddingFor] = useState(null)
 
-  const loadData = () => {
-    let cancelled = false
-    setSlots({})
-    setAddingFor(null)
-    auth.members.forEach((m) => {
-      getEntry(auth.client, date, m.id).then((res) => {
-        if (cancelled) return
-        setSlots((prev) => ({ ...prev, [m.id]: res || null }))
-      })
-    })
-    return () => { cancelled = true }
-  }
+  const loadData = useCallback(async () => {
+    const newSlots = {}
+    for (const m of auth.members) {
+      try {
+        const res = await getEntry(auth.client, date, m.id)
+        newSlots[m.id] = res || null
+      } catch (e) {
+        newSlots[m.id] = null
+      }
+    }
+    setSlots(newSlots)
+  }, [auth.client, auth.members, date])
 
   useEffect(() => {
-    return loadData()
-  }, [date, auth.members.length])
+    setSlots({})
+    setAddingFor(null)
+    loadData()
+  }, [date, auth.members.length, loadData])
 
   return (
     <div style={{
@@ -64,8 +66,8 @@ export default function DualEntryView({ date, onChanged }) {
               <EmptySlot
                 member={m}
                 date={date}
-                onCreated={() => {
-                  loadData()
+                onCreated={(newEntry, newSha) => {
+                  setSlots((prev) => ({ ...prev, [m.id]: { json: newEntry, sha: newSha } }))
                   onChanged?.()
                 }}
               />
@@ -103,9 +105,12 @@ export default function DualEntryView({ date, onChanged }) {
                       initialEntry={null}
                       initialSha={slot?.sha}
                       parentEntry={slot?.json}
-                      onSaved={() => {
+                      onSaved={(savedEntry, savedSha) => {
                         setAddingFor(null)
-                        loadData()
+                        setSlots((prev) => ({
+                          ...prev,
+                          [m.id]: { json: savedEntry, sha: savedSha },
+                        }))
                         onChanged?.()
                       }}
                       onCancel={() => setAddingFor(null)}
@@ -130,7 +135,6 @@ export default function DualEntryView({ date, onChanged }) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '0.4rem',
-                      transition: 'all 0.2s',
                     }}
                     onClick={() => setAddingFor(m.id)}
                   >

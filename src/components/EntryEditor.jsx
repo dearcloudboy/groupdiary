@@ -92,6 +92,7 @@ export default function EntryEditor({
       let payloadToSave = null
 
       if (parentEntry) {
+        // 이미 해당 날짜에 글이 있는 경우 (새 글 추가 또는 기존 글 수정)
         const currentList = parentEntry.subEntries && parentEntry.subEntries.length > 0
           ? [...parentEntry.subEntries]
           : [{ ...parentEntry }]
@@ -103,11 +104,12 @@ export default function EntryEditor({
         }
         payloadToSave = {
           ...parentEntry,
-          ...currentList[0],
+          ...currentList[0], // 하위 호환성 유지
           subEntries: currentList,
           updatedAt: new Date().toISOString(),
         }
       } else {
+        // 해당 날짜에 첫 글을 작성하는 경우
         payloadToSave = {
           ...thisItem,
           subEntries: [thisItem],
