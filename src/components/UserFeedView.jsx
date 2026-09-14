@@ -43,22 +43,37 @@ export default function UserFeedView({ memberId }) {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '1rem',
-          padding: '1rem 1.2rem',
+          gap: '1.2rem',
+          padding: '1.2rem 1.4rem',
           background: 'rgba(255, 255, 255, 0.7)',
-          borderRadius: '16px',
+          borderRadius: '20px',
           backdropFilter: 'blur(8px)',
           boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
         }}
       >
-        <div style={{ width: '48px', height: '48px', flexShrink: 0, overflow: 'hidden', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Avatar member={member} />
+        <div
+          style={{
+            width: '80px',
+            height: '80px',
+            minWidth: '80px',
+            minHeight: '80px',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          }}
+        >
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Avatar member={member} />
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#222' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700, color: '#222' }}>
             {member.displayName}님의 {DIARY_WORD}
           </h2>
-          <span style={{ color: 'var(--muted, #777)', fontSize: '0.85rem' }}>
+          <span style={{ color: 'var(--muted, #777)', fontSize: '0.9rem' }}>
             기록한 날: <strong>{dates.length}</strong>일
           </span>
         </div>
