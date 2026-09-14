@@ -5,7 +5,24 @@
       "displayName": "서리❄️",
       "color": "#9dc412",
       "bgColor": "#fffdd1",
-      "avatar": null
+      "avatar": null,
+      "checklistFields": [
+        {
+          "key": "outing",
+          "label": "외출/운동",
+          "icon": "🚶"
+        },
+        {
+          "key": "cleaning",
+          "label": "청소",
+          "icon": "🧹"
+        },
+        {
+          "key": "delivery",
+          "label": "배달 주문",
+          "icon": "🛵"
+        }
+      ]
     },
     {
       "id": "오리너구리",
