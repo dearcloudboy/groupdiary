@@ -7,12 +7,12 @@
   "checklist": {
     "sleepHours": null,
     "medication": false,
-    "outing": false,
-    "cleaning": true,
+    "outing": true,
+    "cleaning": false,
     "delivery": false
   },
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-14T12:24:12.494Z",
-  "updatedAt": "2026-09-14T12:27:20.702Z"
+  "updatedAt": "2026-09-14T12:27:30.503Z"
 }
