@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
-  deleteEntry, getChecklistFields, imagePath, makeCommentId, saveEntry, toggleReaction, withNewComment,
+  deleteEntry, getChecklistFields, imagePath, makeCommentId, saveEntry, toggleReaction, withNewComment, withoutComment, withUpdatedComment,
 } from '../lib/dataModel.js'
 import { resizeImageFile } from '../lib/image.js'
 import Avatar from './Avatar.jsx'
@@ -11,6 +11,11 @@ import ReactionBar from './ReactionBar.jsx'
 import CommentList from './CommentList.jsx'
 import CommentForm from './CommentForm.jsx'
 import EntryEditor from './EntryEditor.jsx'
+
+function cleanTag(t) {
+  if (!t) return ''
+  return String(t).replace(/^#+/, '').trim()
+}
 
 export default function EntryCard({
   entry: initialEntry,
@@ -84,6 +89,33 @@ export default function EntryCard({
     await persist(nextEntry)
   }
 
+  async function handleDeleteComment(commentId) {
+    if (busy) return
+    if (!window.confirm('이 댓글을 삭제할까요?')) return
+    setBusy(true)
+    try {
+      const nextEntry = withoutComment(entry, commentId)
+      await persist(nextEntry)
+    } catch (e) {
+      window.alert('댓글 삭제에 실패했어요.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleUpdateComment(commentId, newText) {
+    if (busy) return
+    setBusy(true)
+    try {
+      const nextEntry = withUpdatedComment(entry, commentId, newText)
+      await persist(nextEntry)
+    } catch (e) {
+      window.alert('댓글 수정에 실패했어요.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function handleDelete() {
     if (busy) return
     if (!window.confirm('정말 이 글을 삭제할까요?')) return
@@ -130,27 +162,33 @@ export default function EntryCard({
       </header>
 
       {moodTags.length > 0 && !editing && (
-        <div className="entry-mood-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', margin: '0.5rem 0' }}>
-          {moodTags.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              className="entry-mood-tag"
-              onClick={() => onTagClick?.(tag)}
-              style={{
-                cursor: onTagClick ? 'pointer' : 'default',
-                background: 'rgba(0, 0, 0, 0.05)',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '0.2rem 0.6rem',
-                fontSize: '0.85rem',
-                color: 'var(--text, #333)',
-                fontWeight: 500,
-              }}
-            >
-              {tag.startsWith('#') ? tag : `#${tag}`}
-            </button>
-          ))}
+        <div className="entry-mood-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', margin: '0.6rem 0' }}>
+          {moodTags.map((tag) => {
+            const clean = cleanTag(tag)
+            return (
+              <button
+                key={tag}
+                type="button"
+                className="entry-mood-tag"
+                onClick={() => onTagClick?.(clean)}
+                title={`#${clean} 모아보기`}
+                style={{
+                  cursor: onTagClick ? 'pointer' : 'default',
+                  background: 'rgba(125, 160, 250, 0.12)',
+                  color: 'var(--accent, #4a75e6)',
+                  border: '1px solid rgba(125, 160, 250, 0.25)',
+                  borderRadius: '16px',
+                  padding: '0.25rem 0.65rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}
+              >
+                #{clean}
+              </button>
+            )
+          })}
         </div>
       )}
 
@@ -207,7 +245,7 @@ export default function EntryCard({
       <ReactionBar entry={entry} onToggle={handleToggleReaction} />
 
       <div className="comment-section">
-        <CommentList comments={entry.comments} />
+        <CommentList comments={entry.comments} onDelete={handleDeleteComment} onUpdate={handleUpdateComment} />
         <CommentForm onSubmit={handleAddComment} />
       </div>
 

@@ -1,6 +1,6 @@
 // 저장소 안의 파일 구조:
-//   config.json                  -> { members: [{ id, displayName, color, ..., checklistFields }], customReactions: [...] }
-//   index.json                   -> { "2026-09-13": ["minji", "yohan"], ... }
+//   config.json               -> { members: [{ id, displayName, color, ..., checklistFields }], customReactions: [...] }
+//   index.json                -> { "2026-09-13": ["minji", "yohan"], ... }
 //   entries/YYYY-MM-DD/{id}.json -> 한 사람의 그 날짜 일기 (subEntries 배열로 복수 글 지원)
 //   images/YYYY-MM-DD/{id}-xxx   -> 댓글 및 일기 이미지
 
@@ -211,6 +211,20 @@ export function toggleReaction(entry, emoji, memberId) {
 
 export function withNewComment(entry, comment) {
   return { ...entry, comments: [...(entry.comments || []), comment] }
+}
+
+export function withoutComment(entry, commentId) {
+  return {
+    ...entry,
+    comments: (entry.comments || []).filter((c) => c.id !== commentId),
+  }
+}
+
+export function withUpdatedComment(entry, commentId, newText) {
+  return {
+    ...entry,
+    comments: (entry.comments || []).map((c) => (c.id === commentId ? { ...c, text: newText } : c)),
+  }
 }
 
 export function makeCommentId() {
