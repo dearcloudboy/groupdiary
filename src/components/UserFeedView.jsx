@@ -37,14 +37,30 @@ export default function UserFeedView({ memberId }) {
   if (!member) return null
 
   return (
-    <div className="user-feed-view" style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <header className="user-feed-header" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '1rem 0' }}>
-        <Avatar member={member} size="large" />
-        <div>
-          <h2 style={{ margin: 0, fontSize: '1.4rem' }}>{member.displayName}님의 {DIARY_WORD}</h2>
-          <p style={{ margin: '0.2rem 0 0', color: 'var(--muted, #666)', fontSize: '0.9rem' }}>
-            기록한 날: {dates.length}일
-          </p>
+    <div className="user-feed-view" style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
+      <header
+        className="user-feed-header"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          padding: '1rem 1.2rem',
+          background: 'rgba(255, 255, 255, 0.7)',
+          borderRadius: '16px',
+          backdropFilter: 'blur(8px)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+        }}
+      >
+        <div style={{ width: '48px', height: '48px', flexShrink: 0, overflow: 'hidden', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Avatar member={member} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#222' }}>
+            {member.displayName}님의 {DIARY_WORD}
+          </h2>
+          <span style={{ color: 'var(--muted, #777)', fontSize: '0.85rem' }}>
+            기록한 날: <strong>{dates.length}</strong>일
+          </span>
         </div>
       </header>
 
@@ -63,7 +79,6 @@ export default function UserFeedView({ memberId }) {
             const slot = entriesByDate[d]
             if (!slot?.json) return null
 
-            // subEntries가 있으면 모든 서브 글을 다 풀어서 렌더링
             const entryList = slot.json.subEntries && slot.json.subEntries.length > 0
               ? slot.json.subEntries
               : [slot.json]
