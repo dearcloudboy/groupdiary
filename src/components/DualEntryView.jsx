@@ -117,9 +117,39 @@ export default function DualEntryView({ date, onChanged }) {
       })
     })
 
-    // 최신 작성 시간순 정렬
     return list.sort((a, b) => b.timestamp - a.timestamp)
   }, [selectedTag, allEntriesMap, auth.members])
+
+  // 홈(날짜별 보기)에서 멤버 구분 없이 해당 날짜에 작성된 모든 개별 글들을 시간순(최신순)으로 평탄화
+  const todayTimelineItems = useMemo(() => {
+    const items = []
+    auth.members.forEach((m) => {
+      const slot = slots[m.id]
+      if (!slot?.json) return
+
+      const subList = slot.json.subEntries && slot.json.subEntries.length > 0
+        ? slot.json.subEntries
+        : [slot.json]
+
+      subList.forEach((sub, idx) => {
+        const originalIdx = slot.json.subEntries
+          ? slot.json.subEntries.findIndex((e) => e.id === sub.id)
+          : 0
+
+        items.push({
+          memberId: m.id,
+          entry: sub,
+          subIndex: originalIdx >= 0 ? originalIdx : 0,
+          parentEntry: slot.json,
+          sha: slot.sha,
+          timestamp: new Date(sub.createdAt || sub.updatedAt || date).getTime(),
+        })
+      })
+    })
+
+    // 최신 작성 시간순 정렬
+    return items.sort((a, b) => b.timestamp - a.timestamp)
+  }, [slots, auth.members, date])
 
   const handleTagClick = (rawTag) => {
     const target = cleanTag(rawTag)
@@ -186,7 +216,7 @@ export default function DualEntryView({ date, onChanged }) {
         </div>
       )}
 
-      {/* 1) 태그 모아보기 활성화 시: 멤버 구분 없이 단일 타임라인으로 시간순 렌더링 */}
+      {/* 1) 태그 모아보기 활성화 시 */}
       {selectedTag ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', maxWidth: '680px', margin: '0 auto', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.2rem' }}>
@@ -236,40 +266,54 @@ export default function DualEntryView({ date, onChanged }) {
           )}
         </div>
       ) : (
-        /* 2) 기본 날짜별 2단 일기 뷰 */
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '1.5rem',
-          alignItems: 'start',
-          width: '100%',
-        }}>
-          {auth.members.map((m) => {
-            const slot = slots[m.id]
-            const isMine = auth.currentMember?.id === m.id
-            const isAdding = addingFor === m.id
+        /* 2) 홈(날짜별 보기): 작성 시간순 타임라인 피드 + 아직 안 쓴 멤버 슬롯 하단 배치 */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '680px', margin: '0 auto', width: '100%' }}>
+          {/* 이미 작성된 글들의 최신순 타임라인 */}
+          {todayTimelineItems.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
+              {todayTimelineItems.map((item, idx) => (
+                <EntryCard
+                  key={item.entry.id || `${item.memberId}-${idx}`}
+                  entry={item.entry}
+                  subIndex={item.subIndex}
+                  parentEntry={item.parentEntry}
+                  sha={item.sha}
+                  date={date}
+                  memberId={item.memberId}
+                  showDate={false}
+                  onTagClick={handleTagClick}
+                  onUpdated={() => {
+                    loadData()
+                    loadAllHistory()
+                    onChanged?.()
+                  }}
+                  onDeleted={() => {
+                    loadData()
+                    loadAllHistory()
+                    onChanged?.()
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
-            const entryList = slot?.json
-              ? (slot.json.subEntries && slot.json.subEntries.length > 0
-                  ? slot.json.subEntries
-                  : [slot.json])
-              : []
+          {/* 아직 글을 쓰지 않았거나 편집/추가할 수 있는 멤버별 슬롯 (하단 배치) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+            {auth.members.map((m) => {
+              const slot = slots[m.id]
+              const isMine = auth.currentMember?.id === m.id
+              const isAdding = addingFor === m.id
 
-            return (
-              <div
-                key={m.id}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '1.2rem',
-                  width: '100%',
-                  minWidth: 0,
-                }}
-              >
-                {slot === undefined ? (
-                  <div className="card skeleton-card" />
-                ) : slot === null && !isAdding ? (
+              // 데이터 로딩 중인 경우
+              if (slot === undefined) {
+                return <div key={m.id} className="card skeleton-card" />
+              }
+
+              // 아직 아무 글도 안 쓴 멤버 슬롯
+              if (slot === null && !isAdding) {
+                return (
                   <EmptySlot
+                    key={m.id}
                     member={m}
                     date={date}
                     onCreated={(newEntry, newSha) => {
@@ -278,85 +322,69 @@ export default function DualEntryView({ date, onChanged }) {
                       onChanged?.()
                     }}
                   />
-                ) : (
-                  <>
-                    {entryList.map((sub, idx) => (
-                      <EntryCard
-                        key={sub.id || idx}
-                        entry={sub}
-                        subIndex={idx}
-                        parentEntry={slot.json}
-                        sha={slot.sha}
-                        date={date}
-                        memberId={m.id}
-                        onTagClick={handleTagClick}
-                        onUpdated={() => {
-                          loadData()
-                          loadAllHistory()
-                          onChanged?.()
-                        }}
-                        onDeleted={() => {
-                          loadData()
-                          loadAllHistory()
-                          onChanged?.()
-                        }}
-                      />
-                    ))}
+                )
+              }
 
-                    {isAdding && (
-                      <div className="card" style={{ padding: '1.5rem', background: '#ffffff', borderRadius: '16px', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
-                          <Avatar member={m} />
-                          <strong style={{ fontSize: '1rem' }}>{m.displayName}님의 새 {DIARY_WORD}</strong>
-                        </div>
-                        <EntryEditor
-                          date={date}
-                          memberId={m.id}
-                          initialEntry={null}
-                          initialSha={slot?.sha}
-                          parentEntry={slot?.json}
-                          onSaved={(savedEntry, savedSha) => {
-                            setAddingFor(null)
-                            setSlots((prev) => ({
-                              ...prev,
-                              [m.id]: { json: savedEntry, sha: savedSha },
-                            }))
-                            loadAllHistory()
-                            onChanged?.()
-                          }}
-                          onCancel={() => setAddingFor(null)}
-                        />
-                      </div>
-                    )}
+              // 이미 글을 썼지만 본인이 추가(새 서브엔트리) 버튼을 눌렀을 때
+              if (isAdding) {
+                return (
+                  <div key={m.id} className="card" style={{ padding: '1.5rem', background: '#ffffff', borderRadius: '16px', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
+                      <Avatar member={m} />
+                      <strong style={{ fontSize: '1rem' }}>{m.displayName}님의 새 {DIARY_WORD}</strong>
+                    </div>
+                    <EntryEditor
+                      date={date}
+                      memberId={m.id}
+                      initialEntry={null}
+                      initialSha={slot?.sha}
+                      parentEntry={slot?.json}
+                      onSaved={(savedEntry, savedSha) => {
+                        setAddingFor(null)
+                        setSlots((prev) => ({
+                          ...prev,
+                          [m.id]: { json: savedEntry, sha: savedSha },
+                        }))
+                        loadAllHistory()
+                        onChanged?.()
+                      }}
+                      onCancel={() => setAddingFor(null)}
+                    />
+                  </div>
+                )
+              }
 
-                    {isMine && !isAdding && (
-                      <button
-                        type="button"
-                        style={{
-                          width: '100%',
-                          padding: '0.9rem',
-                          borderRadius: '14px',
-                          border: '2px dashed var(--accent, #aaa)',
-                          background: 'rgba(255, 255, 255, 0.8)',
-                          color: 'var(--accent, #333)',
-                          cursor: 'pointer',
-                          fontWeight: 'bold',
-                          fontSize: '0.95rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.4rem',
-                        }}
-                        onClick={() => setAddingFor(m.id)}
-                      >
-                        <span>+</span> 새 {DIARY_WORD} 추가하기
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            )
-          })}
+              // 본인 글이 이미 있고 추가 버튼을 띄워야 하는 경우
+              if (isMine && !isAdding) {
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    style={{
+                      width: '100%',
+                      padding: '0.9rem',
+                      borderRadius: '14px',
+                      border: '2px dashed var(--accent, #aaa)',
+                      background: 'rgba(255, 255, 255, 0.8)',
+                      color: 'var(--accent, #333)',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      fontSize: '0.95rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem',
+                    }}
+                    onClick={() => setAddingFor(m.id)}
+                  >
+                    <span>+</span> {m.displayName}님 새 {DIARY_WORD} 추가하기
+                  </button>
+                )
+              }
+
+              return null
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -369,16 +397,16 @@ function EmptySlot({ member, date, onCreated }) {
 
   if (!isMine) {
     return (
-      <div className="card empty-slot">
+      <div className="card empty-slot" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.2rem' }}>
         <Avatar member={member} />
-        <p>{member.displayName}님이 아직 이 날의 {DIARY_WORD}를 쓰지 않았어요.</p>
+        <p style={{ margin: 0, color: '#777' }}>{member.displayName}님이 아직 이 날의 {DIARY_WORD}를 쓰지 않았어요.</p>
       </div>
     )
   }
 
   return (
-    <div className="card empty-slot mine">
-      <div className="entry-card-who">
+    <div className="card empty-slot mine" style={{ padding: '1.5rem' }}>
+      <div className="entry-card-who" style={{ marginBottom: '1rem' }}>
         <Avatar member={member} />
         <div className="entry-card-name">{member.displayName}</div>
       </div>

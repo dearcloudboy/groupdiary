@@ -1,5 +1,5 @@
 // 저장소 안의 파일 구조:
-//   config.json               -> { members: [{ id, displayName, color, ..., checklistFields }], customReactions: [...] }
+//   config.json               -> { members: [...], customReactions: [{ id, emoji, label }] }
 //   index.json                -> { "2026-09-13": ["minji", "yohan"], ... }
 //   entries/YYYY-MM-DD/{id}.json -> 한 사람의 그 날짜 일기 (subEntries 배열로 복수 글 지원)
 //   images/YYYY-MM-DD/{id}-xxx   -> 댓글 및 일기 이미지
@@ -7,7 +7,7 @@
 export const CONFIG_PATH = 'config.json'
 export const INDEX_PATH = 'index.json'
 
-export const REACTIONS = [
+export const DEFAULT_REACTIONS = [
   { emoji: '👍', label: '따봉' },
   { emoji: '❤️', label: '하트' },
   { emoji: '🍀', label: '네잎클로버' },
@@ -15,6 +15,12 @@ export const REACTIONS = [
   { emoji: '😆', label: '웃김' },
   { emoji: '😢', label: '토닥토닥' },
 ]
+
+// 설정에 등록된 커스텀 이모지 반응을 기본 반응과 합쳐서 반환
+export function getAvailableReactions(config) {
+  const custom = config?.customReactions || []
+  return [...DEFAULT_REACTIONS, ...custom]
+}
 
 export const DEFAULT_CHECKLIST_FIELDS = [
   { key: 'medication', label: '약', icon: '💊' },
@@ -72,7 +78,7 @@ export async function loadConfig(client) {
 }
 
 export async function initConfig(client, firstMember) {
-  const config = { members: [firstMember] }
+  const config = { members: [firstMember], customReactions: [] }
   await client.putJson(CONFIG_PATH, config, { message: '교환 일지 설정 초기화' })
   await client.putJson(INDEX_PATH, {}, { message: '일지 색인 초기화' })
   return config
@@ -107,7 +113,7 @@ export async function addCustomReaction(client, currentConfig, currentSha, react
     ...currentConfig,
     customReactions: [...(currentConfig.customReactions || []), reaction],
   }
-  await client.putJson(CONFIG_PATH, updated, { sha: currentSha, message: `커스텀 반응 추가: ${reaction.name}` })
+  await client.putJson(CONFIG_PATH, updated, { sha: currentSha, message: `이모지 반응 추가: ${reaction.emoji}` })
   return updated
 }
 
@@ -116,7 +122,7 @@ export async function removeCustomReaction(client, currentConfig, currentSha, re
     ...currentConfig,
     customReactions: (currentConfig.customReactions || []).filter((r) => r.id !== reactionId),
   }
-  await client.putJson(CONFIG_PATH, updated, { sha: currentSha, message: '커스텀 반응 삭제' })
+  await client.putJson(CONFIG_PATH, updated, { sha: currentSha, message: '이모지 반응 삭제' })
   return updated
 }
 

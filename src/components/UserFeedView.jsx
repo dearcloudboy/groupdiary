@@ -5,6 +5,11 @@ import { DIARY_WORD } from '../config.js'
 import EntryCard from './EntryCard.jsx'
 import Avatar from './Avatar.jsx'
 
+function cleanTag(t) {
+  if (!t) return ''
+  return String(t).replace(/^#+/, '').trim()
+}
+
 export default function UserFeedView({ memberId }) {
   const auth = useAuth()
   const member = auth.members.find((m) => m.id === memberId)
@@ -46,15 +51,15 @@ export default function UserFeedView({ memberId }) {
 
       list.forEach((sub) => {
         (sub.moodTags || []).forEach((t) => {
-          const clean = t.startsWith('#') ? t : `#${t}`
-          set.add(clean)
+          const c = cleanTag(t)
+          if (c) set.add(c)
         })
       })
     })
     return Array.from(set)
   }, [entriesByDate])
 
-  // 전체 글 평탄화(Flat) 목록 (태그 필터링용)
+  // 전체 글 평탄화 및 작성 시간순(최신순) 정렬
   const allFlattenedEntries = useMemo(() => {
     const result = []
     dates.forEach((d) => {
@@ -65,20 +70,27 @@ export default function UserFeedView({ memberId }) {
         ? slot.json.subEntries
         : [slot.json]
 
-      list.forEach((sub, idx) => {
-        const tags = (sub.moodTags || []).map((t) => (t.startsWith('#') ? t : `#${t}`))
+      list.forEach((sub) => {
+        const tags = (sub.moodTags || []).map(cleanTag)
         if (!selectedTag || tags.includes(selectedTag)) {
+          const originalIdx = slot.json.subEntries
+            ? slot.json.subEntries.findIndex((e) => e.id === sub.id)
+            : 0
+
           result.push({
             date: d,
             entry: sub,
-            subIndex: idx,
+            subIndex: originalIdx >= 0 ? originalIdx : 0,
             parentEntry: slot.json,
             sha: slot.sha,
+            timestamp: new Date(sub.createdAt || sub.updatedAt || d).getTime(),
           })
         }
       })
     })
-    return result
+
+    // 최신 작성 시간순 정렬 (내림차순)
+    return result.sort((a, b) => b.timestamp - a.timestamp)
   }, [dates, entriesByDate, selectedTag])
 
   if (!member) return null
@@ -147,7 +159,7 @@ export default function UserFeedView({ memberId }) {
             display: 'flex',
             flexWrap: 'wrap',
             gap: '0.5rem',
-            padding: '0.8rem 1rem',
+            padding: '0.8rem 1.0rem',
             background: 'rgba(255, 255, 255, 0.85)',
             borderRadius: '16px',
             alignItems: 'center',
@@ -191,7 +203,7 @@ export default function UserFeedView({ memberId }) {
                   cursor: 'pointer',
                 }}
               >
-                {tag}
+                #{tag}
               </button>
             )
           })}
@@ -220,7 +232,7 @@ export default function UserFeedView({ memberId }) {
               memberId={memberId}
               showDate={true}
               onTagClick={(t) => {
-                const clean = t.startsWith('#') ? t : `#${t}`
+                const clean = cleanTag(t)
                 setSelectedTag(clean)
               }}
               onUpdated={reloadData}
