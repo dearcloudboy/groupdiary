@@ -6,10 +6,8 @@
   "images": [],
   "checklist": {
     "sleepHours": null,
-    "medication": false,
-    "outing": false,
-    "cleaning": false,
-    "delivery": false
+    "연성했나요": false,
+    "정신병있나요": true
   },
   "reactions": {},
   "comments": [
@@ -22,5 +20,5 @@
     }
   ],
   "createdAt": "2026-09-14T12:28:32.319Z",
-  "updatedAt": "2026-09-14T12:39:29.955Z"
+  "updatedAt": "2026-09-14T12:55:49.142Z"
 }
