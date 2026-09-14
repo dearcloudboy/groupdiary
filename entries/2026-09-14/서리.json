@@ -12,7 +12,15 @@
     "delivery": false
   },
   "reactions": {},
-  "comments": [],
+  "comments": [
+    {
+      "id": "c5933211-a2b6-479d-b8bb-a7101c3e0feb",
+      "author": "서리",
+      "text": "누가 내트윗 자꾸 뎡배에퍼가는건지모르겟네 흑흑 미친 호모계정을........",
+      "image": null,
+      "createdAt": "2026-09-14T12:39:29.955Z"
+    }
+  ],
   "createdAt": "2026-09-14T12:28:32.319Z",
-  "updatedAt": "2026-09-14T12:28:33.342Z"
+  "updatedAt": "2026-09-14T12:39:29.955Z"
 }
