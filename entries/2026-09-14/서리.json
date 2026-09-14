@@ -38,7 +38,7 @@
     }
   ],
   "createdAt": "2026-09-14T12:28:32.319Z",
-  "updatedAt": "2026-09-14T15:31:02.116Z",
+  "updatedAt": "2026-09-14T17:57:24.744Z",
   "subEntries": [
     {
       "date": "2026-09-14",
@@ -54,6 +54,9 @@
       "reactions": {
         "custom:3f11bcbd-ca31-4571-b521-a26afbfef29a": [
           "오리너구리"
+        ],
+        "custom:7ff15c07-b932-445a-8a3b-c255d338fe7d": [
+          "서리"
         ]
       },
       "comments": [
