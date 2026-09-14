@@ -16,6 +16,9 @@ export const DEFAULT_REACTIONS = [
   { emoji: '😢', label: '토닥토닥' },
 ]
 
+// 기존 컴포넌트 호환용 (ReactionBar 등에서 임포트할 때 에러 안 나도록 유지)
+export const REACTIONS = DEFAULT_REACTIONS
+
 // 설정에 등록된 커스텀 이모지 반응을 기본 반응과 합쳐서 반환
 export function getAvailableReactions(config) {
   const custom = config?.customReactions || []
