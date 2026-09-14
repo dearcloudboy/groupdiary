@@ -11,8 +11,12 @@
     "cleaning": false,
     "delivery": false
   },
-  "reactions": {},
+  "reactions": {
+    "custom:9951956d-d90f-4a67-9aeb-0c403c2de9a1": [
+      "서리"
+    ]
+  },
   "comments": [],
   "createdAt": "2026-09-14T12:24:12.494Z",
-  "updatedAt": "2026-09-14T12:29:25.618Z"
+  "updatedAt": "2026-09-14T12:30:02.531Z"
 }
