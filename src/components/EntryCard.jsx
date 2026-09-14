@@ -12,10 +12,19 @@ import CommentList from './CommentList.jsx'
 import CommentForm from './CommentForm.jsx'
 import EntryEditor from './EntryEditor.jsx'
 
-export default function EntryCard({ entry: initialEntry, sha: initialSha, date, memberId, showDate = false, onDeleted }) {
+export default function EntryCard({
+  entry: initialEntry,
+  sha: initialSha,
+  date,
+  memberId,
+  customPath = null,
+  showDate = false,
+  onDeleted,
+}) {
   const auth = useAuth()
   const [entry, setEntry] = useState(initialEntry)
   const [sha, setSha] = useState(initialSha)
+  const [currentPath, setCurrentPath] = useState(customPath)
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [lightboxPath, setLightboxPath] = useState(null)
@@ -25,9 +34,17 @@ export default function EntryCard({ entry: initialEntry, sha: initialSha, date, 
   const moodTags = entry.moodTags || []
 
   async function persist(nextEntry) {
-    const { entry: saved, sha: nextSha } = await saveEntry(auth.client, date, memberId, nextEntry, sha)
+    const { entry: saved, sha: nextSha, path: savedPath } = await saveEntry(
+      auth.client,
+      date,
+      memberId,
+      nextEntry,
+      sha,
+      currentPath
+    )
     setEntry(saved)
     setSha(nextSha)
+    if (savedPath) setCurrentPath(savedPath)
   }
 
   async function handleToggleReaction(emoji) {
@@ -39,7 +56,7 @@ export default function EntryCard({ entry: initialEntry, sha: initialSha, date, 
     try {
       await persist(optimistic)
     } catch (e) {
-      setEntry(prev) // 실패하면 되돌리기
+      setEntry(prev)
     } finally {
       setBusy(false)
     }
@@ -68,7 +85,7 @@ export default function EntryCard({ entry: initialEntry, sha: initialSha, date, 
     if (!window.confirm('정말 이 글을 삭제할까요? 댓글과 반응도 함께 사라지고, 되돌릴 수 없어요.')) return
     setBusy(true)
     try {
-      await deleteEntry(auth.client, date, memberId, sha)
+      await deleteEntry(auth.client, date, memberId, sha, currentPath)
       onDeleted?.()
     } catch (e) {
       window.alert(e.message || '삭제에 실패했어요.')
@@ -111,7 +128,13 @@ export default function EntryCard({ entry: initialEntry, sha: initialSha, date, 
           memberId={memberId}
           initialEntry={entry}
           initialSha={sha}
-          onSaved={(e, s) => { setEntry(e); setSha(s); setEditing(false) }}
+          customPath={currentPath}
+          onSaved={(e, s, p) => {
+            setEntry(e)
+            setSha(s)
+            if (p) setCurrentPath(p)
+            setEditing(false)
+          }}
           onCancel={() => setEditing(false)}
         />
       ) : (
