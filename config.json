@@ -30,11 +30,6 @@
           "key": "outing",
           "label": "외출/운동",
           "icon": "🚶"
-        },
-        {
-          "key": "delivery",
-          "label": "배달 주문",
-          "icon": "🛵"
         }
       ]
     }
