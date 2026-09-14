@@ -6,6 +6,13 @@
       "color": "#9dc412",
       "bgColor": "#fffdd1",
       "avatar": null
+    },
+    {
+      "id": "오리너구리",
+      "displayName": "오리너구리",
+      "color": "#983caf",
+      "bgColor": "#fdf1f3",
+      "avatar": null
     }
   ]
 }
