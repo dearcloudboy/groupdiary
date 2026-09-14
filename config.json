@@ -6,13 +6,7 @@
       "color": "#9dc412",
       "bgColor": "#fffdd1",
       "avatar": null,
-      "checklistFields": [
-        {
-          "key": "delivery",
-          "label": "배달 주문",
-          "icon": "🛵"
-        }
-      ]
+      "checklistFields": []
     },
     {
       "id": "오리너구리",
