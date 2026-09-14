@@ -20,6 +20,7 @@ export default function EntryCard({
   subIndex = 0,
   parentEntry = null,
   showDate = false,
+  onTagClick = null,
   onUpdated,
   onDeleted,
 }) {
@@ -129,9 +130,26 @@ export default function EntryCard({
       </header>
 
       {moodTags.length > 0 && !editing && (
-        <div className="entry-mood-tags">
+        <div className="entry-mood-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', margin: '0.5rem 0' }}>
           {moodTags.map((tag) => (
-            <span key={tag} className="entry-mood-tag">{tag}</span>
+            <button
+              key={tag}
+              type="button"
+              className="entry-mood-tag"
+              onClick={() => onTagClick?.(tag)}
+              style={{
+                cursor: onTagClick ? 'pointer' : 'default',
+                background: 'rgba(0, 0, 0, 0.05)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.2rem 0.6rem',
+                fontSize: '0.85rem',
+                color: 'var(--text, #333)',
+                fontWeight: 500,
+              }}
+            >
+              {tag.startsWith('#') ? tag : `#${tag}`}
+            </button>
           ))}
         </div>
       )}
