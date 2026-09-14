@@ -17,14 +17,15 @@ export default function EntryCard({
   sha: initialSha,
   date,
   memberId,
-  customPath = null,
+  subIndex = 0,
+  parentEntry = null,
   showDate = false,
+  onUpdated,
   onDeleted,
 }) {
   const auth = useAuth()
   const [entry, setEntry] = useState(initialEntry)
   const [sha, setSha] = useState(initialSha)
-  const [currentPath, setCurrentPath] = useState(customPath)
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [lightboxPath, setLightboxPath] = useState(null)
@@ -34,17 +35,19 @@ export default function EntryCard({
   const moodTags = entry.moodTags || []
 
   async function persist(nextEntry) {
-    const { entry: saved, sha: nextSha, path: savedPath } = await saveEntry(
-      auth.client,
-      date,
-      memberId,
-      nextEntry,
-      sha,
-      currentPath
-    )
-    setEntry(saved)
+    let payload = null
+    if (parentEntry && parentEntry.subEntries && parentEntry.subEntries.length > 0) {
+      const list = [...parentEntry.subEntries]
+      list[subIndex] = nextEntry
+      payload = { ...parentEntry, subEntries: list, updatedAt: new Date().toISOString() }
+    } else {
+      payload = nextEntry
+    }
+
+    const { entry: saved, sha: nextSha } = await saveEntry(auth.client, date, memberId, payload, sha)
+    setEntry(nextEntry)
     setSha(nextSha)
-    if (savedPath) setCurrentPath(savedPath)
+    onUpdated?.()
   }
 
   async function handleToggleReaction(emoji) {
@@ -82,10 +85,21 @@ export default function EntryCard({
 
   async function handleDelete() {
     if (busy) return
-    if (!window.confirm('정말 이 글을 삭제할까요? 댓글과 반응도 함께 사라지고, 되돌릴 수 없어요.')) return
+    if (!window.confirm('정말 이 글을 삭제할까요?')) return
     setBusy(true)
     try {
-      await deleteEntry(auth.client, date, memberId, sha, currentPath)
+      if (parentEntry && parentEntry.subEntries && parentEntry.subEntries.length > 1) {
+        const filtered = parentEntry.subEntries.filter((_, i) => i !== subIndex)
+        const updatedParent = {
+          ...parentEntry,
+          ...filtered[0],
+          subEntries: filtered,
+          updatedAt: new Date().toISOString(),
+        }
+        await saveEntry(auth.client, date, memberId, updatedParent, sha)
+      } else {
+        await deleteEntry(auth.client, date, memberId, sha)
+      }
       onDeleted?.()
     } catch (e) {
       window.alert(e.message || '삭제에 실패했어요.')
@@ -97,7 +111,7 @@ export default function EntryCard({
   const images = entry.images || (entry.image ? [entry.image] : [])
 
   return (
-    <article className="entry-card card" style={{ '--author-color': author?.color || 'var(--accent)' }}>
+    <article className="entry-card card" style={{ '--author-color': author?.color || 'var(--accent)', breakInside: 'avoid' }}>
       <header className="entry-card-header">
         <div className="entry-card-who">
           <Avatar member={author} />
@@ -128,12 +142,11 @@ export default function EntryCard({
           memberId={memberId}
           initialEntry={entry}
           initialSha={sha}
-          customPath={currentPath}
-          onSaved={(e, s, p) => {
-            setEntry(e)
-            setSha(s)
-            if (p) setCurrentPath(p)
+          parentEntry={parentEntry}
+          subIndex={subIndex}
+          onSaved={() => {
             setEditing(false)
+            onUpdated?.()
           }}
           onCancel={() => setEditing(false)}
         />

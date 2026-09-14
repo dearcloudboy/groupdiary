@@ -1,146 +1,230 @@
-import React, { useEffect, useState } from 'react'
+import React, { useRef, useState } from 'react'
+import { emptyEntry, getChecklistFields, imagePath, saveEntry, makeCommentId } from '../lib/dataModel.js'
+import { resizeImageFile } from '../lib/image.js'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getEntriesForMember, emptyEntry } from '../lib/dataModel.js'
 import { DIARY_WORD } from '../config.js'
-import EntryCard from './EntryCard.jsx'
-import EntryEditor from './EntryEditor.jsx'
-import Avatar from './Avatar.jsx'
+import RemoteImage from './RemoteImage.jsx'
+import HashtagInput from './HashtagInput.jsx'
 
-export default function DualEntryView({ date, onChanged }) {
-  const auth = useAuth()
-  const [memberEntries, setMemberEntries] = useState({})
-  const [addingForMember, setAddingForMember] = useState(null)
-
-  const fetchEntries = () => {
-    let cancelled = false
-    setMemberEntries({})
-    setAddingForMember(null)
-
-    auth.members.forEach((m) => {
-      getEntriesForMember(auth.client, date, m.id).then((list) => {
-        if (cancelled) return
-        setMemberEntries((prev) => ({ ...prev, [m.id]: list }))
-      })
-    })
-    return () => { cancelled = true }
-  }
-
-  useEffect(() => {
-    return fetchEntries()
-  }, [date, auth.members.length])
-
-  return (
-    <div className="dual-view">
-      {auth.members.map((m) => {
-        const list = memberEntries[m.id]
-        const isMine = auth.currentMember?.id === m.id
-        const isAdding = addingForMember === m.id
-
-        return (
-          <div className="dual-column" key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {list === undefined ? (
-              <div className="card skeleton-card" />
-            ) : list.length === 0 && !isAdding ? (
-              <EmptySlot
-                member={m}
-                date={date}
-                onCreated={() => {
-                  fetchEntries()
-                  onChanged?.()
-                }}
-              />
-            ) : (
-              <>
-                {list.map((item, idx) => (
-                  <EntryCard
-                    key={item.json?.id || item.path || idx}
-                    entry={item.json}
-                    sha={item.sha}
-                    date={date}
-                    memberId={m.id}
-                    customPath={item.path}
-                    onDeleted={() => {
-                      fetchEntries()
-                      onChanged?.()
-                    }}
-                  />
-                ))}
-
-                {isAdding && (
-                  <div className="card empty-slot mine">
-                    <div className="entry-card-who">
-                      <Avatar member={m} />
-                      <div className="entry-card-name">{m.displayName} (새 {DIARY_WORD})</div>
-                    </div>
-                    <EntryEditor
-                      date={date}
-                      memberId={m.id}
-                      initialEntry={emptyEntry(date, m.id)}
-                      initialSha={undefined}
-                      customPath={null}
-                      onSaved={() => {
-                        setAddingForMember(null)
-                        fetchEntries()
-                        onChanged?.()
-                      }}
-                      onCancel={() => setAddingForMember(null)}
-                    />
-                  </div>
-                )}
-
-                {isMine && !isAdding && (
-                  <button
-                    type="button"
-                    className="btn secondary"
-                    style={{
-                      padding: '0.6rem 1rem',
-                      borderRadius: '12px',
-                      border: '1px dashed var(--accent, #aaa)',
-                      background: 'var(--accent-soft, #f8f8f8)',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                    }}
-                    onClick={() => setAddingForMember(m.id)}
-                  >
-                    + 새 {DIARY_WORD} 추가하기
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
+function hasAnyContent(content, checklist, moodTags, imageCount) {
+  const anyChecked = Object.entries(checklist).some(([key, value]) => key !== 'sleepHours' && value)
+  return !!content.trim()
+    || anyChecked
+    || (checklist.sleepHours !== '' && checklist.sleepHours !== null)
+    || moodTags.length > 0
+    || imageCount > 0
 }
 
-function EmptySlot({ member, date, onCreated }) {
+export default function EntryEditor({
+  date,
+  memberId,
+  initialEntry = null,
+  initialSha = undefined,
+  parentEntry = null,
+  subIndex = null,
+  onSaved,
+  onCancel,
+}) {
   const auth = useAuth()
-  const isMine = auth.currentMember?.id === member.id
+  const base = initialEntry || emptyEntry(date, memberId)
+  const fields = getChecklistFields(auth.members.find((m) => m.id === memberId))
+  const [content, setContent] = useState(base.content || '')
+  const [moodTags, setMoodTags] = useState(base.moodTags || [])
+  const [checklist, setChecklist] = useState(() => {
+    const initial = { sleepHours: base.checklist?.sleepHours ?? '' }
+    fields.forEach((f) => { initial[f.key] = !!base.checklist?.[f.key] })
+    return initial
+  })
+  const [existingImages, setExistingImages] = useState(base.images || (base.image ? [base.image] : []))
+  const [newImages, setNewImages] = useState([])
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+  const fileInputRef = useRef(null)
 
-  if (!isMine) {
-    return (
-      <div className="card empty-slot">
-        <Avatar member={member} />
-        <p>{member.displayName}님이 아직 이 날의 {DIARY_WORD}를 쓰지 않았어요.</p>
-      </div>
-    )
+  function toggle(key) {
+    setChecklist((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  function handleFiles(e) {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+    setNewImages((prev) => [...prev, ...files.map((file) => ({ file, preview: URL.createObjectURL(file) }))])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  function removeExisting(path) {
+    setExistingImages((prev) => prev.filter((p) => p !== path))
+  }
+
+  function removeNew(index) {
+    setNewImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+    try {
+      const uploadedPaths = []
+      for (const img of newImages) {
+        const { base64, extension } = await resizeImageFile(img.file)
+        const path = imagePath(date, memberId, `entry.${extension}`)
+        await auth.client.putBase64File(path, base64, { message: `${DIARY_WORD} 이미지 (${date})` })
+        uploadedPaths.push(path)
+      }
+
+      const thisItem = {
+        ...base,
+        id: base.id || makeCommentId(),
+        content: content.trim(),
+        moodTags,
+        images: [...existingImages, ...uploadedPaths],
+        checklist: {
+          ...checklist,
+          sleepHours: checklist.sleepHours === '' ? null : Number(checklist.sleepHours),
+        },
+        createdAt: base.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      delete thisItem.image
+      delete thisItem.mood
+
+      let payloadToSave = null
+
+      if (parentEntry) {
+        const currentList = parentEntry.subEntries && parentEntry.subEntries.length > 0
+          ? [...parentEntry.subEntries]
+          : [{ ...parentEntry }]
+
+        if (subIndex !== null && subIndex >= 0) {
+          currentList[subIndex] = thisItem
+        } else {
+          currentList.push(thisItem)
+        }
+        payloadToSave = {
+          ...parentEntry,
+          ...currentList[0],
+          subEntries: currentList,
+          updatedAt: new Date().toISOString(),
+        }
+      } else {
+        payloadToSave = {
+          ...thisItem,
+          subEntries: [thisItem],
+        }
+      }
+
+      const { entry, sha } = await saveEntry(auth.client, date, memberId, payloadToSave, initialSha)
+      onSaved(entry, sha)
+    } catch (err) {
+      setError(err.message || '저장에 실패했어요.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
-    <div className="card empty-slot mine">
-      <div className="entry-card-who">
-        <Avatar member={member} />
-        <div className="entry-card-name">{member.displayName}</div>
+    <form className="entry-editor" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+      <div className="mood-row" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+        <span className="mood-row-label" style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>오늘 기분</span>
+        <HashtagInput value={moodTags} onChange={setMoodTags} placeholder="#피곤 #설렘 처럼 적어보세요" />
       </div>
-      <EntryEditor
-        date={date}
-        memberId={member.id}
-        initialEntry={emptyEntry(date, member.id)}
-        initialSha={undefined}
-        customPath={null}
-        onSaved={onCreated}
+
+      <textarea
+        className="entry-textarea"
+        rows={6}
+        placeholder="오늘 하루는 어땠나요?"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        style={{
+          width: '100%',
+          padding: '1rem',
+          borderRadius: '12px',
+          border: '1px solid rgba(0,0,0,0.12)',
+          fontFamily: 'inherit',
+          fontSize: '0.95rem',
+          resize: 'vertical',
+          boxSizing: 'border-box',
+        }}
       />
-    </div>
+
+      <div className="image-upload-row">
+        <label className="attach-btn" title="사진 첨부" style={{ cursor: 'pointer' }}>
+          사진 추가
+          <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFiles} hidden />
+        </label>
+        {(existingImages.length > 0 || newImages.length > 0) && (
+          <div className="image-preview-grid">
+            {existingImages.map((path) => (
+              <div className="image-preview-item" key={path}>
+                <RemoteImage path={path} className="image-preview-thumb" />
+                <button type="button" className="remove-preview" onClick={() => removeExisting(path)}>✕</button>
+              </div>
+            ))}
+            {newImages.map((img, i) => (
+              <div className="image-preview-item" key={i}>
+                <img src={img.preview} alt="첨부 미리보기" className="image-preview-thumb" />
+                <button type="button" className="remove-preview" onClick={() => removeNew(i)}>✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="checklist-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+        {fields.map((f) => (
+          <button
+            type="button"
+            key={f.key}
+            className={`chip toggle ${checklist[f.key] ? 'active' : ''}`}
+            onClick={() => toggle(f.key)}
+          >
+            <span>{f.icon}</span> {f.label}
+          </button>
+        ))}
+        <label className="sleep-input" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+          <span>수면</span>
+          <input
+            type="number" min="0" max="24" step="0.5"
+            placeholder="시간"
+            value={checklist.sleepHours}
+            onChange={(e) => setChecklist((prev) => ({ ...prev, sleepHours: e.target.value }))}
+            style={{ width: '50px', padding: '0.2rem' }}
+          />
+          <span>시간</span>
+        </label>
+      </div>
+
+      {error && <p className="setup-error" style={{ color: 'red', margin: 0 }}>{error}</p>}
+
+      <div className="entry-editor-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '0.5rem' }}>
+        {onCancel && (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={onCancel}
+            style={{ padding: '0.6rem 1.2rem', cursor: 'pointer' }}
+          >
+            취소
+          </button>
+        )}
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={saving || !hasAnyContent(content, checklist, moodTags, existingImages.length + newImages.length)}
+          style={{
+            padding: '0.6rem 1.4rem',
+            borderRadius: '10px',
+            backgroundColor: 'var(--accent, #7da0fa)',
+            color: '#fff',
+            border: 'none',
+            fontWeight: 'bold',
+            cursor: saving ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {saving ? '저장하는 중...' : '저장하기'}
+        </button>
+      </div>
+    </form>
   )
 }
