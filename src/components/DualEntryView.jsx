@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getEntry } from '../lib/dataModel.js'
+import { getEntriesForMember, emptyEntry } from '../lib/dataModel.js'
 import { DIARY_WORD } from '../config.js'
 import EntryCard from './EntryCard.jsx'
 import EntryEditor from './EntryEditor.jsx'
@@ -8,41 +8,110 @@ import Avatar from './Avatar.jsx'
 
 export default function DualEntryView({ date, onChanged }) {
   const auth = useAuth()
-  const [slots, setSlots] = useState({}) // memberId -> { entry, sha } | null | undefined(loading)
+  const [memberEntries, setMemberEntries] = useState({}) // memberId -> Array<{ json, sha, path }> | undefined(loading)
+  const [addingForMember, setAddingForMember] = useState(null) // memberId currently adding a new entry
 
-  useEffect(() => {
+  const fetchEntries = () => {
     let cancelled = false
-    setSlots({})
+    setMemberEntries({})
+    setAddingForMember(null)
+
     auth.members.forEach((m) => {
-      getEntry(auth.client, date, m.id).then((res) => {
+      getEntriesForMember(auth.client, date, m.id).then((list) => {
         if (cancelled) return
-        setSlots((prev) => ({ ...prev, [m.id]: res || null }))
+        setMemberEntries((prev) => ({ ...prev, [m.id]: list }))
       })
     })
     return () => { cancelled = true }
+  }
+
+  useEffect(() => {
+    return fetchEntries()
   }, [date, auth.members.length])
 
   return (
     <div className="dual-view">
       {auth.members.map((m) => {
-        const slot = slots[m.id]
+        const list = memberEntries[m.id]
+        const isMine = auth.currentMember?.id === m.id
+        const isAdding = addingForMember === m.id
+
         return (
-          <div className="dual-column" key={m.id}>
-            {slot === undefined ? (
+          <div className="dual-column" key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {list === undefined ? (
               <div className="card skeleton-card" />
-            ) : slot === null ? (
-              <EmptySlot member={m} date={date} onCreated={(entry, sha) => {
-                setSlots((prev) => ({ ...prev, [m.id]: { json: entry, sha } }))
-                onChanged?.()
-              }} />
-            ) : (
-              <EntryCard
-                entry={slot.json} sha={slot.sha} date={date} memberId={m.id}
-                onDeleted={() => {
-                  setSlots((prev) => ({ ...prev, [m.id]: null }))
+            ) : list.length === 0 && !isAdding ? (
+              <EmptySlot
+                member={m}
+                date={date}
+                onCreated={() => {
+                  fetchEntries()
                   onChanged?.()
                 }}
               />
+            ) : (
+              <>
+                {list.map((item, idx) => (
+                  <EntryCard
+                    key={item.json?.id || item.path || idx}
+                    entry={item.json}
+                    sha={item.sha}
+                    date={date}
+                    memberId={m.id}
+                    customPath={item.path}
+                    onDeleted={() => {
+                      fetchEntries()
+                      onChanged?.()
+                    }}
+                  />
+                ))}
+
+                {isAdding && (
+                  <div className="card empty-slot mine">
+                    <div className="entry-card-who">
+                      <Avatar member={m} />
+                      <div className="entry-card-name">{m.displayName} (추가 기록)</div>
+                    </div>
+                    <EntryEditor
+                      date={date}
+                      memberId={m.id}
+                      initialEntry={emptyEntry(date, m.id)}
+                      initialSha={undefined}
+                      onSaved={() => {
+                        setAddingForMember(null)
+                        fetchEntries()
+                        onChanged?.()
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      style={{ marginTop: '0.5rem', alignSelf: 'flex-start' }}
+                      onClick={() => setAddingForMember(null)}
+                    >
+                      취소
+                    </button>
+                  </div>
+                )}
+
+                {isMine && !isAdding && (
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    style={{
+                      padding: '0.6rem 1rem',
+                      borderRadius: '12px',
+                      border: '1px dashed var(--accent, #aaa)',
+                      background: 'var(--accent-soft, #f8f8f8)',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                    onClick={() => setAddingForMember(m.id)}
+                  >
+                    + 새 {DIARY_WORD} 추가하기
+                  </button>
+                )}
+              </>
             )}
           </div>
         )
@@ -73,9 +142,9 @@ function EmptySlot({ member, date, onCreated }) {
       <EntryEditor
         date={date}
         memberId={member.id}
-        initialEntry={null}
+        initialEntry={emptyEntry(date, member.id)}
         initialSha={undefined}
-        onSaved={(entry, sha) => onCreated(entry, sha)}
+        onSaved={onCreated}
       />
     </div>
   )

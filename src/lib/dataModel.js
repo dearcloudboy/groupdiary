@@ -1,9 +1,8 @@
 // 저장소 안의 파일 구조:
 //   config.json                  -> { members: [{ id, displayName, color, ..., checklistFields }], customReactions: [...] }
-//                                    (체크리스트 항목은 멤버마다 따로 관리됩니다)
-//   index.json                   -> { "2026-09-13": ["minji", "yohan"], ... }  (날짜별 작성자 인덱스, 조회 속도용)
-//   entries/YYYY-MM-DD/{id}.json -> 한 사람의 그 날짜 일기
-//   images/YYYY-MM-DD/{id}-xxx   -> 댓글에 첨부된 이미지
+//   index.json                   -> { "2026-09-13": ["minji", "yohan"], ... }
+//   entries/YYYY-MM-DD/{id}-{entryId}.json -> 하루 복수 일기 지원 (레거시: {id}.json)
+//   images/YYYY-MM-DD/{id}-xxx   -> 첨부 이미지
 
 export const CONFIG_PATH = 'config.json'
 export const INDEX_PATH = 'index.json'
@@ -35,8 +34,14 @@ export function todayStr(d = new Date()) {
   return `${y}-${m}-${day}`
 }
 
-export function entryPath(date, memberId) {
-  return `entries/${date}/${memberId}.json`
+export function makeEntryId() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID().slice(0, 8)
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+}
+
+export function entryPath(date, memberId, entryId = null) {
+  if (!entryId) return `entries/${date}/${memberId}.json`
+  return `entries/${date}/${memberId}-${entryId}.json`
 }
 
 export function entryDirPath(date) {
@@ -49,6 +54,7 @@ export function imagePath(date, memberId, filename) {
 
 export function emptyEntry(date, memberId) {
   return {
+    id: makeEntryId(),
     date,
     author: memberId,
     moodTags: [],
@@ -138,7 +144,6 @@ export async function loadIndex(client) {
 }
 
 async function markIndexed(client, date, memberId) {
-  // 낙관적으로 갱신하되, sha 충돌이 나면 한 번 다시 읽어서 재시도합니다.
   for (let attempt = 0; attempt < 3; attempt++) {
     const { json, sha } = await loadIndex(client)
     const authors = new Set(json[date] || [])
@@ -149,7 +154,7 @@ async function markIndexed(client, date, memberId) {
       await client.putJson(INDEX_PATH, updated, { sha, message: `색인 갱신 ${date}` })
       return
     } catch (e) {
-      if (e.status === 409 || e.status === 422) continue // sha 충돌, 재시도
+      if (e.status === 409 || e.status === 422) continue
       throw e
     }
   }
@@ -172,32 +177,68 @@ async function unmarkIndexed(client, date, memberId) {
   }
 }
 
-export async function getEntry(client, date, memberId) {
-  const res = await client.getJson(entryPath(date, memberId))
-  if (!res) return null
-  return res // { json, sha }
+// 해당 날짜/멤버의 모든 글 목록을 반환합니다.
+export async function getEntriesForMember(client, date, memberId) {
+  const dir = entryDirPath(date)
+  let files = []
+  try {
+    const res = await client.getJson(dir)
+    if (Array.isArray(res)) files = res
+    else if (res?.json && Array.isArray(res.json)) files = res.json
+  } catch (e) {
+    // 폴더가 없으면 빈 배열
+  }
+
+  const matches = files.filter(f => f.name.startsWith(memberId) && f.name.endsWith('.json'))
+  if (matches.length === 0) {
+    // fallback: 기존 단일 파일(memberId.json) 직접 조회
+    const single = await client.getJson(entryPath(date, memberId))
+    return single ? [{ json: single.json, sha: single.sha, path: entryPath(date, memberId) }] : []
+  }
+
+  const results = await Promise.all(
+    matches.map(async (f) => {
+      const res = await client.getJson(f.path)
+      return res ? { json: res.json, sha: res.sha, path: f.path } : null
+    })
+  )
+  return results.filter(Boolean).sort((a, b) => new Date(a.json.createdAt) - new Date(b.json.createdAt))
 }
 
-export async function saveEntry(client, date, memberId, entryData, sha) {
-  const payload = { ...entryData, updatedAt: new Date().toISOString() }
-  const result = await client.putJson(entryPath(date, memberId), payload, {
+export async function getEntry(client, date, memberId) {
+  const entries = await getEntriesForMember(client, date, memberId)
+  return entries.length > 0 ? entries[0] : null
+}
+
+export async function saveEntry(client, date, memberId, entryData, sha, customPath = null) {
+  const entryId = entryData.id || makeEntryId()
+  const payload = { ...entryData, id: entryId, updatedAt: new Date().toISOString() }
+  const targetPath = customPath || entryPath(date, memberId, entryId)
+
+  const result = await client.putJson(targetPath, payload, {
     sha,
-    message: `${memberId}의 ${date} 일기`,
+    message: `${memberId}의 ${date} 일기 (${entryId})`,
   })
   await markIndexed(client, date, memberId)
-  return { entry: payload, sha: result?.content?.sha }
+  return { entry: payload, sha: result?.content?.sha, path: targetPath }
 }
 
-export async function deleteEntry(client, date, memberId, sha) {
-  await client.deleteFile(entryPath(date, memberId), sha, { message: `${memberId}의 ${date} 일기 삭제` })
-  await unmarkIndexed(client, date, memberId)
+export async function deleteEntry(client, date, memberId, sha, customPath = null) {
+  const targetPath = customPath || entryPath(date, memberId)
+  await client.deleteFile(targetPath, sha, { message: `${memberId}의 ${date} 일기 삭제` })
+  
+  // 남은 글이 없으면 색인에서 제거
+  const remaining = await getEntriesForMember(client, date, memberId)
+  if (remaining.length === 0) {
+    await unmarkIndexed(client, date, memberId)
+  }
 }
 
 export async function listDatesForMember(client, memberId) {
   const { json } = await loadIndex(client)
   return Object.keys(json)
     .filter((date) => (json[date] || []).includes(memberId))
-    .sort((a, b) => (a < b ? 1 : -1)) // 최신순
+    .sort((a, b) => (a < b ? 1 : -1))
 }
 
 export function toggleReaction(entry, emoji, memberId) {
