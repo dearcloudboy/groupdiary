@@ -11,8 +11,12 @@
     "cleaning": false,
     "delivery": false
   },
-  "reactions": {},
+  "reactions": {
+    "❤️": [
+      "오리너구리"
+    ]
+  },
   "comments": [],
   "createdAt": "2026-09-14T12:24:12.494Z",
-  "updatedAt": "2026-09-14T12:25:00.799Z"
+  "updatedAt": "2026-09-14T12:25:04.694Z"
 }
