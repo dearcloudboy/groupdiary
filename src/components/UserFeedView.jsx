@@ -52,6 +52,7 @@ export default function UserFeedView({ memberId }) {
         }}
       >
         <div
+          className="user-feed-avatar-wrap"
           style={{
             width: '80px',
             height: '80px',
@@ -62,13 +63,27 @@ export default function UserFeedView({ memberId }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           }}
         >
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Avatar member={member} />
-          </div>
+          {/* Avatar 내부 엘리먼트와 이미지가 80px에 무조건 꽉 차도록 강제 스타일 주입 */}
+          <style>{`
+            .user-feed-avatar-wrap .avatar,
+            .user-feed-avatar-wrap .avatar img,
+            .user-feed-avatar-wrap img {
+              width: 80px !important;
+              height: 80px !important;
+              min-width: 80px !important;
+              min-height: 80px !important;
+              font-size: 2rem !important;
+              line-height: 80px !important;
+              object-fit: cover !important;
+              border-radius: 50% !important;
+            }
+          `}</style>
+          <Avatar member={member} />
         </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700, color: '#222' }}>
             {member.displayName}님의 {DIARY_WORD}
