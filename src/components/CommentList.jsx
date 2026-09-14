@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
+import Avatar from './Avatar.jsx'
 import RemoteImage from './RemoteImage.jsx'
 
 export default function CommentList({ comments = [], onDelete, onUpdate }) {
@@ -47,8 +48,9 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
               borderRadius: '12px',
             }}
           >
-            {/* 30px 고정 원형 아바타 (깨짐 방지 직접 렌더링) */}
+            {/* 공식 Avatar 컴포넌트를 활용한 30px 고정 원형 프사 */}
             <div
+              className="comment-avatar-wrap"
               style={{
                 width: '30px',
                 height: '30px',
@@ -56,24 +58,27 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
                 minHeight: '30px',
                 borderRadius: '50%',
                 overflow: 'hidden',
-                backgroundColor: author?.color || '#ccc',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                color: '#fff',
-                fontWeight: 'bold',
-                fontSize: '0.75rem',
               }}
             >
-              {author?.avatar ? (
-                <RemoteImage
-                  path={author.avatar}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <span>{(author?.displayName || c.author)?.[0] || '?'}{cleanEmoji(author?.emoji)}</span>
-              )}
+              <style>{`
+                .comment-avatar-wrap .avatar,
+                .comment-avatar-wrap .avatar img,
+                .comment-avatar-wrap img {
+                  width: 30px !important;
+                  height: 30px !important;
+                  min-width: 30px !important;
+                  min-height: 30px !important;
+                  font-size: 1rem !important;
+                  line-height: 30px !important;
+                  object-fit: cover !important;
+                  border-radius: 50% !important;
+                }
+              `}</style>
+              <Avatar member={author} />
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -134,11 +139,6 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
       })}
     </div>
   )
-}
-
-function cleanEmoji(e) {
-  if (!e) return ''
-  return String(e).trim()
 }
 
 function formatTime(isoStr) {
