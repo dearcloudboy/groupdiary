@@ -38,5 +38,68 @@
     }
   ],
   "createdAt": "2026-09-14T12:28:32.319Z",
-  "updatedAt": "2026-09-14T13:22:03.284Z"
+  "updatedAt": "2026-09-14T13:40:07.216Z",
+  "subEntries": [
+    {
+      "date": "2026-09-14",
+      "author": "서리",
+      "moodTags": [],
+      "content": "와 폰으로도 되다니❣️",
+      "images": [],
+      "checklist": {
+        "sleepHours": null,
+        "연성했나요": false,
+        "정신병있나요": true
+      },
+      "reactions": {
+        "custom:3f11bcbd-ca31-4571-b521-a26afbfef29a": [
+          "오리너구리"
+        ]
+      },
+      "comments": [
+        {
+          "id": "c5933211-a2b6-479d-b8bb-a7101c3e0feb",
+          "author": "서리",
+          "text": "누가 내트윗 자꾸 뎡배에퍼가는건지모르겟네 흑흑 미친 호모계정을........",
+          "image": null,
+          "createdAt": "2026-09-14T12:39:29.955Z"
+        },
+        {
+          "id": "ca0a83a2-0ecb-4b1d-ad4c-bf1c223bc222",
+          "author": "오리너구리",
+          "text": "아니그게무슨일이에요",
+          "image": null,
+          "createdAt": "2026-09-14T13:00:41.872Z"
+        },
+        {
+          "id": "3e188600-d270-487b-abac-1589dd698340",
+          "author": "서리",
+          "text": "흐흑 구경하러 갔다가 제 트위터 발견할 때마다 수치스러워서눈물이나..",
+          "image": null,
+          "createdAt": "2026-09-14T13:05:14.269Z"
+        }
+      ],
+      "createdAt": "2026-09-14T12:28:32.319Z",
+      "updatedAt": "2026-09-14T13:22:03.284Z"
+    },
+    {
+      "id": "82dca69e-d870-4c99-99fd-3754843217c7",
+      "date": "2026-09-14",
+      "author": "서리",
+      "moodTags": [
+        "#되나?"
+      ],
+      "content": "테스트",
+      "images": [],
+      "checklist": {
+        "sleepHours": null,
+        "연성했나요": false,
+        "정신병있나요": false
+      },
+      "reactions": {},
+      "comments": [],
+      "createdAt": "2026-09-14T13:40:05.636Z",
+      "updatedAt": "2026-09-14T13:40:07.216Z"
+    }
+  ]
 }
