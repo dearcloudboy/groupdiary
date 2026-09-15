@@ -11,8 +11,8 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
 
   if (comments.length === 0) return null
 
-  // 기본은 최신 댓글 5개만 노출, '모든 댓글 보기' 누르면 전체 노출
   const totalCount = comments.length
+  // 기본은 최신 5개만, '모든 댓글 보기' 누르면 전체 표시
   const displayedComments = showAll ? comments : comments.slice(-5)
 
   function startEdit(c) {
@@ -34,7 +34,7 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
 
   return (
     <div className="comment-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '0.8rem' }}>
-      {/* 댓글이 5개 초과이고 아직 펼치지 않았다면 상단에 '모든 댓글 보기' 버튼 노출 */}
+      {/* 5개 초과 시 상단에 '모든 댓글 보기' 버튼 배치 */}
       {!showAll && totalCount > 5 && (
         <button
           type="button"

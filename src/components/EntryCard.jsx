@@ -35,6 +35,7 @@ export default function EntryCard({
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [lightboxPath, setLightboxPath] = useState(null)
+  const [detailOpen, setDetailOpen] = useState(false) // 단독 상세 뷰 모달 상태
 
   const author = auth.members.find((m) => m.id === memberId)
   const isMine = auth.currentMember?.id === memberId
@@ -74,7 +75,8 @@ export default function EntryCard({
   async function handleAddComment({ text, imageFile }) {
     let imgPath = null
     if (imageFile) {
-      const { base64, extension } = await resizeImageFile(imageFile)
+      // 댓글 이미지 업로드 시 안전하게 리사이즈/압축 수행 (maxWidth: 1000px)
+      const { base64, extension } = await resizeImageFile(imageFile, 1000, 0.8)
       imgPath = imagePath(date, auth.currentMember.id, `comment.${extension}`)
       await auth.client.putBase64File(imgPath, base64, { message: `댓글 이미지 (${date})` })
     }
@@ -143,8 +145,8 @@ export default function EntryCard({
   const sleepHours = entry.checklist?.sleepHours
   const images = entry.images || (entry.image ? [entry.image] : [])
 
-  return (
-    <article className="entry-card card" style={{ '--author-color': author?.color || 'var(--accent)', breakInside: 'avoid' }}>
+  const renderCardContent = (isModal = false) => (
+    <article className="entry-card card" style={{ '--author-color': author?.color || 'var(--accent)', breakInside: 'avoid', width: isModal ? '100%' : 'auto', maxWidth: isModal ? '650px' : 'none', margin: isModal ? 'auto' : '0' }}>
       <header className="entry-card-header">
         <div className="entry-card-who">
           <Avatar member={author} />
@@ -153,12 +155,17 @@ export default function EntryCard({
             {showDate && <div className="entry-card-date">{formatDate(date)}</div>}
           </div>
         </div>
-        {isMine && !editing && (
-          <div className="entry-card-actions">
-            <button className="btn btn-ghost btn-small" onClick={() => setEditing(true)}>수정</button>
-            <button className="btn btn-ghost btn-small btn-danger" onClick={handleDelete} disabled={busy}>삭제</button>
-          </div>
-        )}
+        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+          {isMine && !editing && !isModal && (
+            <div className="entry-card-actions">
+              <button className="btn btn-ghost btn-small" onClick={() => setEditing(true)}>수정</button>
+              <button className="btn btn-ghost btn-small btn-danger" onClick={handleDelete} disabled={busy}>삭제</button>
+            </div>
+          )}
+          {isModal && (
+            <button className="btn btn-ghost btn-small" onClick={() => setDetailOpen(false)}>닫기 ✕</button>
+          )}
+        </div>
       </header>
 
       {moodTags.length > 0 && !editing && (
@@ -219,26 +226,37 @@ export default function EntryCard({
             })}
             {sleepHours != null && <span className="chip checklist-status">{sleepHours}시간 수면</span>}
           </div>
-          {entry.content ? (
-            <p className="entry-content">{entry.content}</p>
-          ) : (
-            <p className="entry-content empty">글 없이 체크리스트만 기록했어요.</p>
-          )}
-          {images.length > 0 && (
-            <div className="entry-image-grid">
-              {images.map((path) => (
-                <button
-                  type="button"
-                  key={path}
-                  className="entry-image-btn"
-                  onClick={() => setLightboxPath(path)}
-                  aria-label="사진 크게 보기"
-                >
-                  <RemoteImage path={path} className="entry-image" />
-                </button>
-              ))}
-            </div>
-          )}
+
+          {/* 본문 영역 클릭 시 단독 상세 뷰(모달) 오픈 */}
+          <div
+            onClick={() => !isModal && setDetailOpen(true)}
+            style={{ cursor: isModal ? 'default' : 'pointer' }}
+            title={isModal ? '' : '클릭해서 자세히 보기'}
+          >
+            {entry.content ? (
+              <p className="entry-content">{entry.content}</p>
+            ) : (
+              <p className="entry-content empty">글 없이 체크리스트만 기록했어요.</p>
+            )}
+            {images.length > 0 && (
+              <div className="entry-image-grid">
+                {images.map((path) => (
+                  <button
+                    type="button"
+                    key={path}
+                    className="entry-image-btn"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setLightboxPath(path)
+                    }}
+                    aria-label="사진 크게 보기"
+                  >
+                    <RemoteImage path={path} className="entry-image" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </>
       )}
 
@@ -251,6 +269,37 @@ export default function EntryCard({
 
       <Lightbox path={lightboxPath} onClose={() => setLightboxPath(null)} />
     </article>
+  )
+
+  return (
+    <>
+      {renderCardContent(false)}
+
+      {/* 본문 클릭 시 뜨는 단독 상세 뷰 오버레이 모달 */}
+      {detailOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignCenter: 'center',
+            justifyContent: 'center',
+            zIndex: 1100,
+            padding: '1.5rem',
+            overflowY: 'auto',
+          }}
+          onClick={() => setDetailOpen(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '650px', margin: 'auto' }}>
+            {renderCardContent(true)}
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
