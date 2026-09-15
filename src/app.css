@@ -1,3 +1,11 @@
+/* 프리텐다드 웹 폰트 불러오기 (반드시 파일 맨 위에 있어야 합니다) */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+/* 페이지 전체에 프리텐다드 폰트 1순위로 적용 */
+*, body, button, input, textarea {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif !important;
+}
+
 /* ---------- 레이아웃 ---------- */
 .app-shell {
   display: flex;
@@ -95,37 +103,9 @@
 .swatch.active { border-color: var(--ink); }
 .swatch-custom { width: 28px; height: 28px; padding: 0; border: 1px dashed var(--line); border-radius: 50%; background: none; }
 
-/* ---------- 캘린더 페이지 (위: 캘린더, 아래: 그날의 글) ---------- */
-.calendar-page {
-  display: flex; flex-direction: column; gap: 28px;
-  max-width: 1400px; margin: 0 auto;
-}
-.calendar { width: 100%; max-width: 380px; margin: 0 auto; background: var(--surface-gradient); }
-.calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.calendar-header h2 { font-size: 16px; margin: 0; }
-.calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.calendar-cell {
-  aspect-ratio: 1; border: none; background: transparent; border-radius: var(--radius-md);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  font-size: 13px; color: var(--ink);
-}
-.calendar-cell:not(.empty):hover { background: var(--surface-sunken); }
-.calendar-cell.today { font-weight: 800; color: var(--accent); }
-.calendar-cell.selected { background: var(--accent-soft); }
-.calendar-dots { display: flex; gap: 2px; min-height: 6px; }
-.calendar-dot { width: 5px; height: 5px; border-radius: 50%; }
-
-.calendar-detail { width: 100%; }
-.detail-heading { font-size: 18px; margin: 0 0 14px; text-align: center; }
-.feed-eyebrow {
-  margin: 0 0 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
-  color: var(--ink-soft); text-transform: uppercase;
-}
-
+/* ---------- 피드 공통 (DualView 등) ---------- */
 .dual-view {
   display: grid;
-  /* 한 줄에 최대 3장까지만 배치되도록 폭을 직접 제한합니다. (부모 요소 크기와 무관하게 항상 적용) */
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   gap: 20px;
   align-items: start;
@@ -350,13 +330,7 @@
 .home-nav-icon svg { width: 16px; height: 16px; }
 .home-nav-item.active .home-nav-icon { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 
-/* ---------- 모바일 ---------- */
+/* ---------- 모바일 전용 (Layout.jsx 인라인과 충돌 방지를 위해 최소화) ---------- */
 @media (max-width: 640px) {
-  .app-shell { flex-direction: column; }
-  .sidebar { width: 100%; height: auto; position: static; flex-direction: row; align-items: center; padding: 14px 16px; overflow-x: auto; gap: 12px; }
-  .sidebar-top { flex-direction: row; align-items: center; gap: 12px; overflow-x: auto; }
-  .member-nav { flex-direction: row; }
-  .member-nav-name { max-width: 64px; }
-  .sidebar-bottom { flex-direction: row; margin-left: auto; flex-shrink: 0; }
-  .main-area { padding: 18px 14px; }
+  /* Layout.jsx에서 React Style로 제어하므로 app.css에서는 충돌할 수 있는 강제 속성을 지웠습니다 */
 }
