@@ -92,7 +92,7 @@
     }
   ],
   "createdAt": "2026-09-15T01:36:59.864Z",
-  "updatedAt": "2026-09-15T04:40:49.540Z",
+  "updatedAt": "2026-09-15T04:55:37.346Z",
   "subEntries": [
     {
       "id": "1a85806d-bdfc-44d5-9053-fdec1b81f5ad",
@@ -206,7 +206,11 @@
         "글을썼나요": true,
         "정신병이왔나요": true
       },
-      "reactions": {},
+      "reactions": {
+        "😆": [
+          "서리"
+        ]
+      },
       "comments": [],
       "createdAt": "2026-09-15T04:40:45.255Z",
       "updatedAt": "2026-09-15T04:40:49.539Z"
