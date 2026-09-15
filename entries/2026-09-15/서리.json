@@ -39,7 +39,7 @@
     }
   ],
   "createdAt": "2026-09-14T16:15:23.113Z",
-  "updatedAt": "2026-09-15T19:27:42.409Z",
+  "updatedAt": "2026-09-15T19:28:32.166Z",
   "subEntries": [
     {
       "id": "b922a36f-5ec7-480f-8519-15e0f328bd99",
@@ -97,15 +97,7 @@
         "정신병": true
       },
       "reactions": {},
-      "comments": [
-        {
-          "id": "a0e084d2-65b6-4238-928f-18808ef4a850",
-          "author": "서리",
-          "text": "",
-          "image": "images/2026-09-15/서리-1789500460858-comment.jpg",
-          "createdAt": "2026-09-15T19:27:42.409Z"
-        }
-      ],
+      "comments": [],
       "createdAt": "2026-09-15T01:29:55.189Z",
       "updatedAt": "2026-09-15T01:29:57.046Z"
     },
