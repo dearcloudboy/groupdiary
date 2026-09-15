@@ -92,7 +92,7 @@
     }
   ],
   "createdAt": "2026-09-15T01:36:59.864Z",
-  "updatedAt": "2026-09-15T04:55:43.568Z",
+  "updatedAt": "2026-09-15T04:56:00.308Z",
   "subEntries": [
     {
       "id": "1a85806d-bdfc-44d5-9053-fdec1b81f5ad",
@@ -220,7 +220,15 @@
           "서리"
         ]
       },
-      "comments": [],
+      "comments": [
+        {
+          "id": "6555e01a-397e-4ade-9caf-dd36be84be5c",
+          "author": "서리",
+          "text": "저도 너무 보고 싶어요. 오늘중으로올려주시길",
+          "image": null,
+          "createdAt": "2026-09-15T04:56:00.308Z"
+        }
+      ],
       "createdAt": "2026-09-15T04:40:45.255Z",
       "updatedAt": "2026-09-15T04:40:49.539Z"
     }
