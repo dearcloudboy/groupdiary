@@ -13,10 +13,46 @@
     "끄적이기": true,
     "정병on": true
   },
-  "reactions": {},
-  "comments": [],
+  "reactions": {
+    "custom:7c0bc378-b45c-4430-b965-d7862598e369": [
+      "서리"
+    ],
+    "🍀": [
+      "서리"
+    ]
+  },
+  "comments": [
+    {
+      "id": "00ff1b7e-dd4a-4e1c-a4b3-d2b4722efbaa",
+      "author": "서리",
+      "text": "저도 노래가사에 많은 감응을 합니다 반가운 공통점이군요 포타는 언제쯤 올라올 수 있을까요?ㅋㅋㅋㅋ",
+      "image": null,
+      "createdAt": "2026-09-15T10:14:03.257Z"
+    },
+    {
+      "id": "1d0d3f0e-6a13-4dc6-843a-2228c4da991b",
+      "author": "오리너구리",
+      "text": "아재밌겠다 포타 500개.. 존버하면 다 볼 수 잇다는거죠",
+      "image": null,
+      "createdAt": "2026-09-15T10:44:28.636Z"
+    },
+    {
+      "id": "eb97cc04-cbd0-4bbf-8043-b1598858052c",
+      "author": "은행",
+      "text": "포타 500개...입벌리구 있을게요",
+      "image": null,
+      "createdAt": "2026-09-15T10:56:41.016Z"
+    },
+    {
+      "id": "4b280edd-c952-4b70-bd93-dfae6b3f5029",
+      "author": "keum",
+      "text": "아니진짜 이사람들이?",
+      "image": null,
+      "createdAt": "2026-09-15T11:01:11.781Z"
+    }
+  ],
   "createdAt": "2026-09-15T09:41:56.173Z",
-  "updatedAt": "2026-09-15T11:01:11.781Z",
+  "updatedAt": "2026-09-15T11:04:23.180Z",
   "subEntries": [
     {
       "id": "d1b96b89-cb04-4fe3-9855-d51bc1167a2d",
@@ -73,6 +109,25 @@
       ],
       "createdAt": "2026-09-15T09:41:56.173Z",
       "updatedAt": "2026-09-15T10:03:53.268Z"
+    },
+    {
+      "id": "b9ca8a20-5f04-49b0-a738-4d256ddf1059",
+      "date": "2026-09-15",
+      "author": "keum",
+      "moodTags": [
+        "#넋두리"
+      ],
+      "content": "물어보고 싶은게 생겼어요\n다들 포핸즈 1-6화중 최애 화는 무엇이신가요\n저는 5화입니다….\n개큰정병부분이라 좋아요",
+      "images": [],
+      "checklist": {
+        "sleepHours": null,
+        "끄적이기": false,
+        "정병on": true
+      },
+      "reactions": {},
+      "comments": [],
+      "createdAt": "2026-09-15T11:04:17.943Z",
+      "updatedAt": "2026-09-15T11:04:23.179Z"
     }
   ]
 }
