@@ -6,7 +6,9 @@ export default function CommentForm({ onSubmit }) {
   const [preview, setPreview] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  
   const fileInputRef = useRef(null)
+  const textareaRef = useRef(null) // textarea 높이 조절을 위한 ref 추가
 
   // 브라우저에서 이미지를 받아 최대 너비 1000px 기준 비율대로 깔끔하게 압축/리사이즈하는 함수
   function resizeImageFile(imageFile, maxWidth = 1000, quality = 0.8) {
@@ -18,7 +20,6 @@ export default function CommentForm({ onSubmit }) {
           let width = img.width
           let height = img.height
 
-          // 원본이 지정된 최대 너비보다 크면 비율에 맞춰 줄임
           if (width > maxWidth) {
             height = Math.round((height * maxWidth) / width)
             width = maxWidth
@@ -30,10 +31,8 @@ export default function CommentForm({ onSubmit }) {
           const ctx = canvas.getContext('2d')
           ctx.drawImage(img, 0, 0, width, height)
 
-          // JPEG 형식의 데이터 URL로 변환
           const dataUrl = canvas.toDataURL('image/jpeg', quality)
           
-          // DataUrl을 Blob/File로 변환
           const arr = dataUrl.split(',')
           const mime = arr[0].match(/:(.*?);/)[1]
           const bstr = atob(arr[1])
@@ -59,7 +58,6 @@ export default function CommentForm({ onSubmit }) {
     const f = e.target.files?.[0]
     if (!f) return
     try {
-      // 업로드 전 자동 리사이즈 및 미리보기 갱신
       const { file: compressedFile, previewUrl } = await resizeImageFile(f, 1000, 0.8)
       setFile(compressedFile)
       setPreview(previewUrl)
@@ -77,18 +75,40 @@ export default function CommentForm({ onSubmit }) {
   }
 
   async function handleSubmit(e) {
-    e.preventDefault()
+    if (e && e.preventDefault) e.preventDefault()
     if (!text.trim() && !file) return
+    
     setBusy(true)
     setError(null)
     try {
       await onSubmit({ text: text.trim(), imageFile: file })
       setText('')
       clearFile()
+      // 등록 성공 시 높이 초기화
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'
+      }
     } catch (err) {
       setError(err.message || '댓글을 남기지 못했어요.')
     } finally {
       setBusy(false)
+    }
+  }
+
+  // 키보드 입력 핸들러: Enter = 등록, Shift+Enter = 줄바꿈
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault() // 기본 줄바꿈 방지
+      handleSubmit(e)
+    }
+  }
+
+  // 텍스트가 길어지면 textarea 높이를 자동으로 늘려주는 함수
+  const handleTextChange = (e) => {
+    setText(e.target.value)
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
     }
   }
 
@@ -100,18 +120,36 @@ export default function CommentForm({ onSubmit }) {
           <button type="button" className="remove-preview" onClick={clearFile}>✕</button>
         </div>
       )}
-      <div className="comment-form-row">
-        <input
-          type="text"
+      {/* 입력창이 늘어날 때 버튼들이 아래쪽에 맞춰지도록 alignItems를 flex-end로 조절 */}
+      <div className="comment-form-row" style={{ alignItems: 'flex-end' }}>
+        <textarea
+          ref={textareaRef}
           placeholder="댓글을 남겨보세요..."
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={handleTextChange}
+          onKeyDown={handleKeyDown}
+          rows={1}
+          style={{
+            flex: 1,
+            minWidth: 0,
+            resize: 'none', /* 우측 하단 크기 조절 막기 */
+            overflowY: 'auto',
+            padding: '9px 12px',
+            borderRadius: '8px',
+            border: '1px solid var(--line)',
+            background: 'var(--surface)',
+            fontFamily: 'inherit',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            maxHeight: '150px', /* 너무 길어지면 내부 스크롤 생성 */
+            boxSizing: 'border-box'
+          }}
         />
-        <label className="attach-btn" title="사진 첨부">
+        <label className="attach-btn" title="사진 첨부" style={{ marginBottom: '2px' }}>
           사진 추가
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFile} hidden />
         </label>
-        <button className="btn btn-primary" type="submit" disabled={busy || (!text.trim() && !file)}>
+        <button className="btn btn-primary" type="submit" disabled={busy || (!text.trim() && !file)} style={{ marginBottom: '2px' }}>
           {busy ? '올리는 중...' : '등록'}
         </button>
       </div>
