@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import Avatar from './Avatar.jsx'
 import RemoteImage from './RemoteImage.jsx'
 
-export default function CommentList({ comments = [], onDelete, onUpdate, onCommentClick }) {
+export default function CommentList({ comments = [], onDelete, onUpdate, onCommentClick, onImageClick }) {
   const auth = useAuth()
   const [editingId, setEditingId] = useState(null)
   const [editText, setEditText] = useState('')
@@ -91,9 +91,23 @@ export default function CommentList({ comments = [], onDelete, onUpdate, onComme
                 </p>
               )}
 
+              {/* 댓글 사진을 본문처럼 예쁘게 자르고 버튼으로 감싸서 클릭하면 팝업되게 수정했습니다! */}
               {c.image && !isEditing && (
-                <div style={{ marginTop: '0.4rem', maxWidth: '160px' }}>
-                  <RemoteImage path={c.image} style={{ width: '100%', borderRadius: '8px' }} />
+                <div style={{ marginTop: '0.6rem' }}>
+                  <button
+                    type="button"
+                    style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'block' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onImageClick?.(c.image);
+                    }}
+                    title="사진 크게 보기"
+                  >
+                    <RemoteImage 
+                      path={c.image} 
+                      style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '8px', display: 'block' }} 
+                    />
+                  </button>
                 </div>
               )}
             </div>

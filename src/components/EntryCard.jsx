@@ -16,12 +16,37 @@ function cleanTag(t) {
   return String(t).replace(/^#+/, '').trim()
 }
 
-function fileToBase64(file) {
+// 브라우저 자체 기능(Canvas)을 이용해 폰 카메라의 거대한 사진을 빠르고 안전하게 압축하는 함수
+function compressImage(file, maxWidth = 1000, quality = 0.8) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = reject
     reader.readAsDataURL(file)
+    reader.onload = (event) => {
+      const img = new Image()
+      img.src = event.target.result
+      img.onload = () => {
+        let width = img.width
+        let height = img.height
+
+        // 가로가 maxWidth(1000px)보다 크면 비율에 맞춰서 줄임
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width)
+          width = maxWidth
+        }
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality)
+        const base64 = dataUrl.split(',')[1]
+        resolve({ base64, extension: 'jpg' })
+      }
+      img.onerror = (err) => reject(err)
+    }
+    reader.onerror = (err) => reject(err)
   })
 }
 
@@ -33,8 +58,8 @@ export default function EntryCard({
   subIndex = 0,
   parentEntry = null,
   showDate = false,
-  isDetailView = false, // 단독 뷰 모드 여부
-  onOpenDetail = null,  // 페이지 이동 함수
+  isDetailView = false, 
+  onOpenDetail = null,  
   onTagClick = null,
   onUpdated,
   onDeleted,
@@ -84,13 +109,19 @@ export default function EntryCard({
   async function handleAddComment({ text, imageFile }) {
     let imgPath = null
     if (imageFile) {
-      const dataUrl = await fileToBase64(imageFile)
-      const base64Data = dataUrl.split(',')[1]
-      const extension = imageFile.name ? imageFile.name.split('.').pop() : 'jpg'
-      
-      imgPath = imagePath(date, auth.currentMember.id, `comment.${extension}`)
-      await auth.client.putBase64File(imgPath, base64Data, { message: `댓글 이미지 (${date})` })
+      try {
+        setBusy(true)
+        const { base64, extension } = await compressImage(imageFile, 1000, 0.8)
+        imgPath = imagePath(date, auth.currentMember.id, `comment.${extension}`)
+        await auth.client.putBase64File(imgPath, base64, { message: `댓글 이미지 (${date})` })
+      } catch (error) {
+        console.error("이미지 압축 실패:", error)
+        window.alert('이미지를 처리하는 중 오류가 발생했습니다.')
+        setBusy(false)
+        return
+      }
     }
+    
     const comment = {
       id: makeCommentId(),
       author: auth.currentMember.id,
@@ -100,6 +131,7 @@ export default function EntryCard({
     }
     const nextEntry = withNewComment(entry, comment)
     await persist(nextEntry)
+    setBusy(false)
   }
 
   async function handleDeleteComment(commentId) {
@@ -248,11 +280,13 @@ export default function EntryCard({
       <ReactionBar entry={entry} onToggle={handleToggleReaction} />
 
       <div className="comment-section">
+        {/* CommentList에 사진을 클릭했을 때 Lightbox를 여는 onImageClick 속성을 추가했습니다 */}
         <CommentList 
           comments={entry.comments} 
           onDelete={handleDeleteComment} 
           onUpdate={handleUpdateComment} 
           onCommentClick={triggerDetailView} 
+          onImageClick={(path) => setLightboxPath(path)}
         />
         <CommentForm onSubmit={handleAddComment} />
       </div>
