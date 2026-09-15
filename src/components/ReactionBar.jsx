@@ -76,7 +76,6 @@ export default function ReactionBar({ entry, onToggle }) {
   return (
     <div className="reaction-bar">
       
-      {/* 이모지 크기를 18px로 대폭 줄이고 창을 얄쌍하게 다이어트하는 스타일 */}
       <style>{`
         .custom-emoji-picker .EmojiPickerReact {
           --epr-emoji-size: 18px !important; 
@@ -87,6 +86,14 @@ export default function ReactionBar({ entry, onToggle }) {
           --epr-category-navigation-button-size: 20px !important; 
           border: none !important;
           font-family: inherit !important;
+        }
+
+        /* 모바일 화면 밖으로 튀어나가지 않도록 반응형 위치 제어 */
+        @media (max-width: 480px) {
+          .reaction-picker-smart {
+            left: auto !important;
+            right: 0 !important;
+          }
         }
       `}</style>
 
@@ -127,13 +134,13 @@ export default function ReactionBar({ entry, onToggle }) {
       })}
 
       {/* 2. 새 반응 추가 버튼 & 피커 팝업 */}
-      <div className="reaction-add-wrap" ref={wrapRef}>
+      <div className="reaction-add-wrap" ref={wrapRef} style={{ position: 'relative' }}>
         <button type="button" className="reaction-add-btn" onClick={() => setOpen((v) => !v)}>
           + 반응 추가
         </button>
 
         {open && (
-          <div className="reaction-picker custom-emoji-picker" style={{ width: '260px', padding: '8px' }}>
+          <div className="reaction-picker custom-emoji-picker reaction-picker-smart" style={{ width: '260px', padding: '8px' }}>
             {!pending ? (
               <>
                 {/* 2-1. 커스텀 스티커 영역 */}
@@ -187,7 +194,7 @@ export default function ReactionBar({ entry, onToggle }) {
                     }}
                     autoFocusSearch={false}
                     width="100%"
-                    height={220} /* 높이도 아담하게 줄임 */
+                    height={220}
                     searchPlaceHolder="이모지 검색..."
                     previewConfig={{ showPreview: false }} 
                     skinTonesDisabled={true} 
