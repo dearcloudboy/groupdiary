@@ -5,7 +5,6 @@ import Layout from './components/Layout.jsx'
 import DualEntryView from './components/DualEntryView.jsx'
 import UserFeedView from './components/UserFeedView.jsx'
 import SettingsModal from './components/SettingsModal.jsx'
-import NotificationBell from './components/NotificationBell.jsx'
 import { todayStr } from './lib/dataModel.js'
 import './app.css'
 
@@ -36,24 +35,14 @@ function Shell() {
   if (!ready) return <Setup />
 
   return (
-    <>
-      {/* 우측 하단에 알림 벨을 고정으로 띄워 기존 레이아웃 충돌 방지 */}
-      <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999 }}>
-        <NotificationBell onSelectDate={() => {
-          setActiveMemberId(null) // 알림 클릭 시 메인 피드로 이동
-        }} />
-      </div>
-
-      <Layout activeMemberId={activeMemberId} onSelectMember={setActiveMemberId} onOpenSettings={() => setSettingsOpen(true)}>
-        {/* 캘린더 컴포넌트를 지우고, 기본 화면에 DualEntryView(메인 피드)를 노출 */}
-        {activeMemberId ? (
-          <UserFeedView memberId={activeMemberId} />
-        ) : (
-          <DualEntryView date={todayStr()} onChanged={() => {}} />
-        )}
-        {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
-      </Layout>
-    </>
+    <Layout activeMemberId={activeMemberId} onSelectMember={setActiveMemberId} onOpenSettings={() => setSettingsOpen(true)}>
+      {activeMemberId ? (
+        <UserFeedView memberId={activeMemberId} />
+      ) : (
+        <DualEntryView date={todayStr()} onChanged={() => {}} />
+      )}
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+    </Layout>
   )
 }
 
