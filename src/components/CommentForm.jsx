@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 
 export default function CommentForm({ onSubmit }) {
   const [text, setText] = useState('')
@@ -8,9 +8,16 @@ export default function CommentForm({ onSubmit }) {
   const [error, setError] = useState(null)
   
   const fileInputRef = useRef(null)
-  const textareaRef = useRef(null) // textarea 높이 조절을 위한 ref 추가
+  const textareaRef = useRef(null)
 
-  // 브라우저에서 이미지를 받아 최대 너비 1000px 기준 비율대로 깔끔하게 압축/리사이즈하는 함수
+  // 텍스트가 바뀔 때마다 확실하게 높이를 다시 계산하도록 수정!
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+    }
+  }, [text])
+
   function resizeImageFile(imageFile, maxWidth = 1000, quality = 0.8) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
@@ -84,10 +91,6 @@ export default function CommentForm({ onSubmit }) {
       await onSubmit({ text: text.trim(), imageFile: file })
       setText('')
       clearFile()
-      // 등록 성공 시 높이 초기화
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto'
-      }
     } catch (err) {
       setError(err.message || '댓글을 남기지 못했어요.')
     } finally {
@@ -95,20 +98,13 @@ export default function CommentForm({ onSubmit }) {
     }
   }
 
-  // 키보드 입력 핸들러: Enter = 등록, Shift+Enter = 줄바꿈
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault() // 기본 줄바꿈 방지
-      handleSubmit(e)
-    }
-  }
+    // 한글 조합 중일 때 엔터 누르면 글자가 두 번 써지거나 바로 등록되는 현상 방지!
+    if (e.nativeEvent.isComposing) return
 
-  // 텍스트가 길어지면 textarea 높이를 자동으로 늘려주는 함수
-  const handleTextChange = (e) => {
-    setText(e.target.value)
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit(e)
     }
   }
 
@@ -120,19 +116,18 @@ export default function CommentForm({ onSubmit }) {
           <button type="button" className="remove-preview" onClick={clearFile}>✕</button>
         </div>
       )}
-      {/* 입력창이 늘어날 때 버튼들이 아래쪽에 맞춰지도록 alignItems를 flex-end로 조절 */}
       <div className="comment-form-row" style={{ alignItems: 'flex-end' }}>
         <textarea
           ref={textareaRef}
           placeholder="댓글을 남겨보세요..."
           value={text}
-          onChange={handleTextChange}
+          onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           rows={1}
           style={{
             flex: 1,
             minWidth: 0,
-            resize: 'none', /* 우측 하단 크기 조절 막기 */
+            resize: 'none',
             overflowY: 'auto',
             padding: '9px 12px',
             borderRadius: '8px',
@@ -141,7 +136,7 @@ export default function CommentForm({ onSubmit }) {
             fontFamily: 'inherit',
             fontSize: '14px',
             lineHeight: '1.5',
-            maxHeight: '150px', /* 너무 길어지면 내부 스크롤 생성 */
+            maxHeight: '150px',
             boxSizing: 'border-box'
           }}
         />
