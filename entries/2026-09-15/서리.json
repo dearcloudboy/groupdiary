@@ -32,7 +32,7 @@
     }
   ],
   "createdAt": "2026-09-14T16:15:23.113Z",
-  "updatedAt": "2026-09-15T04:18:20.263Z",
+  "updatedAt": "2026-09-15T08:34:08.069Z",
   "subEntries": [
     {
       "id": "b922a36f-5ec7-480f-8519-15e0f328bd99",
@@ -106,7 +106,11 @@
         "연성": false,
         "정신병": true
       },
-      "reactions": {},
+      "reactions": {
+        "😢": [
+          "은행"
+        ]
+      },
       "comments": [],
       "createdAt": "2026-09-15T04:09:16.534Z",
       "updatedAt": "2026-09-15T04:09:18.700Z"
