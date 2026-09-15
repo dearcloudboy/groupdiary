@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T01:37:21.961Z",
-  "updatedAt": "2026-09-15T02:49:01.861Z",
+  "updatedAt": "2026-09-15T02:49:04.043Z",
   "subEntries": [
     {
       "id": "844c58fe-b509-4c7c-9c76-c7d544875b60",
@@ -29,6 +29,9 @@
       },
       "reactions": {
         "❤️": [
+          "서리"
+        ],
+        "custom:37ff6ea0-45e9-46a0-b444-030626d0a92a": [
           "서리"
         ]
       },
