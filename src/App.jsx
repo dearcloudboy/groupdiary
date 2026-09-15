@@ -1,148 +1,66 @@
 import React, { useEffect, useState } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
-import { todayStr } from './lib/dataModel.js'
-import { APP_TITLE } from './config.js'
-import SetupModal from './components/SetupModal.jsx'
+import Setup from './components/Setup.jsx'
+import Layout from './components/Layout.jsx'
 import DualEntryView from './components/DualEntryView.jsx'
 import UserFeedView from './components/UserFeedView.jsx'
-import Avatar from './components/Avatar.jsx'
+import SettingsModal from './components/SettingsModal.jsx'
 import NotificationBell from './components/NotificationBell.jsx'
+import { todayStr } from './lib/dataModel.js'
 import './app.css'
 
-export default function App() {
+const DEFAULT_BG_GRADIENT = 'linear-gradient(165deg, #fdf1f3 0%, #fbeef1 45%, #f7e9ee 100%)'
+
+function Shell() {
   const auth = useAuth()
-  const [selectedDate, setSelectedDate] = useState(todayStr())
-  const [currentView, setCurrentView] = useState('dual') // 'dual' = 홈 피드, 'member' = 유저 피드
-  const [selectedMemberId, setSelectedMemberId] = useState(null)
-  const [editingMember, setEditingMember] = useState(null)
+  const [activeMemberId, setActiveMemberId] = useState(null) // null = 메인 피드 보기
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
-  if (auth.loading) {
-    return (
-      <div className="center-screen">
-        <div className="spinner" />
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (auth.currentMember?.color) {
+      document.documentElement.style.setProperty('--accent', auth.currentMember.color)
+      document.documentElement.style.setProperty('--accent-soft', `${auth.currentMember.color}22`)
+    }
+    document.documentElement.style.setProperty('--bg-gradient', auth.currentMember?.bgColor || DEFAULT_BG_GRADIENT)
+  }, [auth.currentMember?.color, auth.currentMember?.bgColor])
 
-  if (auth.needsSetup) {
-    return <SetupModal />
-  }
+  // 멤버가 삭제되는 등으로 더 이상 존재하지 않으면 메인 피드로 되돌립니다.
+  useEffect(() => {
+    if (activeMemberId && !auth.members.some((m) => m.id === activeMemberId)) {
+      setActiveMemberId(null)
+    }
+  }, [activeMemberId, auth.members])
 
-  const goHome = () => {
-    setCurrentView('dual')
-    setSelectedMemberId(null)
-  }
+  const ready = auth.status === 'ready' && auth.currentMember
 
-  const openMemberFeed = (mId) => {
-    setSelectedMemberId(mId)
-    setCurrentView('member')
-  }
+  if (!ready) return <Setup />
 
   return (
-    <div className="app-layout">
-      {/* 사이드바 네비게이션 */}
-      <aside className="sidebar">
-        <div className="brand" onClick={goHome} style={{ cursor: 'pointer' }}>
-          <span className="brand-icon">📝</span>
-          <span className="brand-title">{APP_TITLE}</span>
-        </div>
+    <>
+      {/* 우측 하단에 알림 벨을 고정으로 띄워 기존 레이아웃 충돌 방지 */}
+      <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999 }}>
+        <NotificationBell onSelectDate={() => {
+          setActiveMemberId(null) // 알림 클릭 시 메인 피드로 이동
+        }} />
+      </div>
 
-        <nav className="nav-menu">
-          <button
-            type="button"
-            className={`nav-item ${currentView === 'dual' ? 'active' : ''}`}
-            onClick={goHome}
-          >
-            <span className="nav-icon">🏠</span>
-            <span>홈 (피드)</span>
-          </button>
-
-          <div className="nav-members-list">
-            {auth.members.map((m) => {
-              const isMe = auth.currentMember?.id === m.id
-              const isActive = currentView === 'member' && selectedMemberId === m.id
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  className={`nav-item member-item ${isActive ? 'active' : ''}`}
-                  onClick={() => openMemberFeed(m.id)}
-                >
-                  <Avatar member={m} size="small" />
-                  <span className="nav-member-name">{m.displayName}</span>
-                  {isMe && <span className="badge-me">나</span>}
-                </button>
-              )
-            })}
-          </div>
-        </nav>
-
-        <div className="sidebar-footer">
-          <button
-            type="button"
-            className="sidebar-footer-btn"
-            onClick={() => setEditingMember(auth.currentMember)}
-          >
-            설정
-          </button>
-          <button
-            type="button"
-            className="sidebar-footer-btn"
-            onClick={() => auth.logout()}
-          >
-            로그아웃
-          </button>
-        </div>
-      </aside>
-
-      {/* 메인 뷰 컨텐츠 */}
-      <main className="main-content">
-        {currentView === 'dual' && (
-          <header className="main-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.8rem' }}>
-            <div className="date-picker-wrap" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#666' }}>작성 날짜:</span>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="date-picker"
-                title="이 날짜에 새 글 쓰기"
-              />
-              {selectedDate !== todayStr() && (
-                <button
-                  type="button"
-                  className="btn btn-primary btn-small"
-                  onClick={() => setSelectedDate(todayStr())}
-                >
-                  오늘
-                </button>
-              )}
-            </div>
-
-            {/* 댓글 알림 벨 */}
-            <NotificationBell onSelectDate={(d) => {
-              setSelectedDate(d)
-              setCurrentView('dual')
-            }} />
-          </header>
+      <Layout activeMemberId={activeMemberId} onSelectMember={setActiveMemberId} onOpenSettings={() => setSettingsOpen(true)}>
+        {/* 캘린더 컴포넌트를 지우고, 기본 화면에 DualEntryView(메인 피드)를 노출 */}
+        {activeMemberId ? (
+          <UserFeedView memberId={activeMemberId} />
+        ) : (
+          <DualEntryView date={todayStr()} onChanged={() => {}} />
         )}
+        {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+      </Layout>
+    </>
+  )
+}
 
-        <div className="content-body" style={{ marginTop: currentView === 'dual' ? '1rem' : '0' }}>
-          {currentView === 'dual' ? (
-            <DualEntryView date={selectedDate} onChanged={() => {}} />
-          ) : (
-            <UserFeedView memberId={selectedMemberId} />
-          )}
-        </div>
-      </main>
-
-      {/* 설정/프로필 수정 모달 */}
-      {editingMember && (
-        <SetupModal
-          initialMember={editingMember}
-          onClose={() => setEditingMember(null)}
-        />
-      )}
-    </div>
+export default function App() {
+  return (
+    <AuthProvider>
+      <Shell />
+    </AuthProvider>
   )
 }

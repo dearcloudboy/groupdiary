@@ -35,7 +35,7 @@ export default function DualEntryView({ date, onChanged }) {
   const [allEntriesMap, setAllEntriesMap] = useState({})
   const [loading, setLoading] = useState(true)
 
-  // 상단 글쓰기 영역을 위해 현재 선택된 date의 작성 여부 확인
+  // 상단 내 글쓰기 영역을 위해 현재 선택된 date의 작성 여부 확인
   const loadData = useCallback(async () => {
     const newSlots = {}
     for (const m of auth.members) {
@@ -243,55 +243,18 @@ export default function DualEntryView({ date, onChanged }) {
       {!selectedTag && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', marginBottom: '1rem' }}>
           {auth.members.map((m) => {
-            const slot = slots[m.id]
             const isMine = auth.currentMember?.id === m.id
+            
+            // 다른 사람의 빈 슬롯이나 글쓰기 버튼은 아예 렌더링하지 않음
+            if (!isMine) return null
+
+            const slot = slots[m.id]
             const isAdding = addingFor === m.id
 
             if (slot === undefined) return <div key={m.id} className="card skeleton-card" style={{ padding: '1.5rem' }} />
 
-            // 이미 해당 날짜에 글을 썼다면 피드에 나오므로 이 영역에서는 숨김!
-            if (slot?.json) return null
-
-            // 글을 아직 안 썼다면 글쓰기 에디터 또는 빈 슬롯 알림 표시
-            if (slot === null && !isAdding) {
-              return (
-                <EmptySlot
-                  key={m.id}
-                  member={m}
-                  date={date}
-                  onCreated={(newEntry, newSha) => {
-                    setSlots((prev) => ({ ...prev, [m.id]: { json: newEntry, sha: newSha } }))
-                    reloadAll()
-                  }}
-                />
-              )
-            }
-
-            if (isAdding) {
-              return (
-                <div key={m.id} className="card" style={{ padding: '1.5rem', background: '#fff', borderRadius: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
-                    <Avatar member={m} />
-                    <strong style={{ fontSize: '1rem' }}>{m.displayName}님의 새 {DIARY_WORD}</strong>
-                  </div>
-                  <EntryEditor
-                    date={date}
-                    memberId={m.id}
-                    initialEntry={null}
-                    initialSha={slot?.sha}
-                    parentEntry={slot?.json}
-                    onSaved={(savedEntry, savedSha) => {
-                      setAddingFor(null)
-                      setSlots((prev) => ({ ...prev, [m.id]: { json: savedEntry, sha: sha } }))
-                      reloadAll()
-                    }}
-                    onCancel={() => setAddingFor(null)}
-                  />
-                </div>
-              )
-            }
-
-            if (isMine && !isAdding) {
+            // 내가 이미 글을 썼고, 추가 작성 모드가 아니라면 "새 글 추가하기" 버튼만 띄움
+            if (slot?.json && !isAdding) {
               return (
                 <button
                   key={m.id}
@@ -314,7 +277,28 @@ export default function DualEntryView({ date, onChanged }) {
               )
             }
 
-            return null
+            // 아직 글을 안 썼거나, 추가 작성 모드일 때 에디터 표시
+            return (
+              <div key={m.id} className="card" style={{ padding: '1.5rem', background: '#fff', borderRadius: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
+                  <Avatar member={m} />
+                  <strong style={{ fontSize: '1rem' }}>{m.displayName}님의 새 {DIARY_WORD}</strong>
+                </div>
+                <EntryEditor
+                  date={date}
+                  memberId={m.id}
+                  initialEntry={null}
+                  initialSha={slot?.sha}
+                  parentEntry={slot?.json}
+                  onSaved={(savedEntry, savedSha) => {
+                    setAddingFor(null)
+                    setSlots((prev) => ({ ...prev, [m.id]: { json: savedEntry, sha: savedSha } }))
+                    reloadAll()
+                  }}
+                  onCancel={slot?.json ? () => setAddingFor(null) : undefined}
+                />
+              </div>
+            )
           })}
         </div>
       )}
@@ -390,36 +374,6 @@ export default function DualEntryView({ date, onChanged }) {
           )}
         </div>
       )}
-    </div>
-  )
-}
-
-function EmptySlot({ member, date, onCreated }) {
-  const auth = useAuth()
-  const isMine = auth.currentMember?.id === member.id
-
-  if (!isMine) {
-    return (
-      <div className="card empty-slot" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.2rem' }}>
-        <Avatar member={member} />
-        <p style={{ margin: 0, color: '#777', fontSize: '0.9rem' }}>{member.displayName}님이 아직 이 날의 {DIARY_WORD}를 쓰지 않았어요.</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="card empty-slot mine" style={{ padding: '1.5rem' }}>
-      <div className="entry-card-who" style={{ marginBottom: '1rem' }}>
-        <Avatar member={member} />
-        <div className="entry-card-name" style={{ fontSize: '1.05rem' }}>{member.displayName}</div>
-      </div>
-      <EntryEditor
-        date={date}
-        memberId={member.id}
-        initialEntry={null}
-        initialSha={undefined}
-        onSaved={onCreated}
-      />
     </div>
   )
 }
