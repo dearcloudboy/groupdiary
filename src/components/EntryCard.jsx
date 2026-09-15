@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import {
   deleteEntry, getChecklistFields, imagePath, makeCommentId, saveEntry, toggleReaction, withNewComment, withoutComment, withUpdatedComment,
 } from '../lib/dataModel.js'
+import { resizeImageFile } from '../lib/image.js'
 import Avatar from './Avatar.jsx'
 import RemoteImage from './RemoteImage.jsx'
 import Lightbox from './Lightbox.jsx'
@@ -16,15 +17,6 @@ function cleanTag(t) {
   return String(t).replace(/^#+/, '').trim()
 }
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
 export default function EntryCard({
   entry: initialEntry,
   sha: initialSha,
@@ -33,8 +25,6 @@ export default function EntryCard({
   subIndex = 0,
   parentEntry = null,
   showDate = false,
-  isDetailView = false, 
-  onOpenDetail = null,  
   onTagClick = null,
   onUpdated,
   onDeleted,
@@ -50,7 +40,8 @@ export default function EntryCard({
   const isMine = auth.currentMember?.id === memberId
   const moodTags = entry.moodTags || []
 
-  async function persist(nextEntry) {
+  // 💡 notifyParent를 추가하여, 리액션 등 사소한 인터랙션 시 부모 피드 전체가 새로고침되는 것을 방지
+  async function persist(nextEntry, notifyParent = true) {
     let payload = null
     if (parentEntry && parentEntry.subEntries && parentEntry.subEntries.length > 0) {
       const list = [...parentEntry.subEntries]
@@ -61,45 +52,33 @@ export default function EntryCard({
     }
 
     const { entry: saved, sha: nextSha } = await saveEntry(auth.client, date, memberId, payload, sha)
-    setEntry(nextEntry)
+    setEntry(saved || nextEntry)
     setSha(nextSha)
-    onUpdated?.()
+    if (notifyParent) {
+      onUpdated?.()
+    }
   }
 
+  // 💡 리액션 누를 때는 부모 피드를 리로드(새고)하지 않고 내 카드만 조용히 업데이트 후 백그라운드 저장
   async function handleToggleReaction(emoji) {
     if (busy) return
-    setBusy(true)
     const prev = entry
     const optimistic = toggleReaction(entry, emoji, auth.currentMember.id)
     setEntry(optimistic)
     try {
-      await persist(optimistic)
+      await persist(optimistic, false)
     } catch (e) {
       setEntry(prev)
-    } finally {
-      setBusy(false)
     }
   }
 
   async function handleAddComment({ text, imageFile }) {
     let imgPath = null
     if (imageFile) {
-      try {
-        setBusy(true)
-        const dataUrl = await fileToBase64(imageFile)
-        const base64Data = dataUrl.split(',')[1]
-        const extension = imageFile.name ? imageFile.name.split('.').pop() : 'jpg'
-        
-        imgPath = imagePath(date, auth.currentMember.id, `comment.${extension}`)
-        await auth.client.putBase64File(imgPath, base64Data, { message: `댓글 이미지 (${date})` })
-      } catch (error) {
-        console.error("이미지 업로드 실패:", error)
-        window.alert('이미지를 업로드하는 중 오류가 발생했습니다.')
-        setBusy(false)
-        return
-      }
+      const { base64, extension } = await resizeImageFile(imageFile)
+      imgPath = imagePath(date, auth.currentMember.id, `comment.${extension}`)
+      await auth.client.putBase64File(imgPath, base64, { message: `댓글 이미지 (${date})` })
     }
-    
     const comment = {
       id: makeCommentId(),
       author: auth.currentMember.id,
@@ -108,8 +87,7 @@ export default function EntryCard({
       createdAt: new Date().toISOString(),
     }
     const nextEntry = withNewComment(entry, comment)
-    await persist(nextEntry)
-    setBusy(false)
+    await persist(nextEntry, true)
   }
 
   async function handleDeleteComment(commentId) {
@@ -118,7 +96,7 @@ export default function EntryCard({
     setBusy(true)
     try {
       const nextEntry = withoutComment(entry, commentId)
-      await persist(nextEntry)
+      await persist(nextEntry, true)
     } catch (e) {
       window.alert('댓글 삭제에 실패했어요.')
     } finally {
@@ -131,7 +109,7 @@ export default function EntryCard({
     setBusy(true)
     try {
       const nextEntry = withUpdatedComment(entry, commentId, newText)
-      await persist(nextEntry)
+      await persist(nextEntry, true)
     } catch (e) {
       window.alert('댓글 수정에 실패했어요.')
     } finally {
@@ -147,7 +125,10 @@ export default function EntryCard({
       if (parentEntry && parentEntry.subEntries && parentEntry.subEntries.length > 1) {
         const filtered = parentEntry.subEntries.filter((_, i) => i !== subIndex)
         const updatedParent = {
-          ...parentEntry, ...filtered[0], subEntries: filtered, updatedAt: new Date().toISOString(),
+          ...parentEntry,
+          ...filtered[0],
+          subEntries: filtered,
+          updatedAt: new Date().toISOString(),
         }
         await saveEntry(auth.client, date, memberId, updatedParent, sha)
       } else {
@@ -163,12 +144,6 @@ export default function EntryCard({
   const sleepHours = entry.checklist?.sleepHours
   const images = entry.images || (entry.image ? [entry.image] : [])
 
-  const triggerDetailView = () => {
-    if (!isDetailView && onOpenDetail) {
-      onOpenDetail({ date, memberId, entryId: entry.id })
-    }
-  }
-
   return (
     <article className="entry-card card" style={{ '--author-color': author?.color || 'var(--accent)', breakInside: 'avoid' }}>
       <header className="entry-card-header">
@@ -179,14 +154,12 @@ export default function EntryCard({
             {showDate && <div className="entry-card-date">{formatDate(date)}</div>}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-          {isMine && !editing && (
-            <div className="entry-card-actions">
-              <button className="btn btn-ghost btn-small" onClick={() => setEditing(true)}>수정</button>
-              <button className="btn btn-ghost btn-small btn-danger" onClick={handleDelete} disabled={busy}>삭제</button>
-            </div>
-          )}
-        </div>
+        {isMine && !editing && (
+          <div className="entry-card-actions">
+            <button className="btn btn-ghost btn-small" onClick={() => setEditing(true)}>수정</button>
+            <button className="btn btn-ghost btn-small btn-danger" onClick={handleDelete} disabled={busy}>삭제</button>
+          </div>
+        )}
       </header>
 
       {moodTags.length > 0 && !editing && (
@@ -199,10 +172,18 @@ export default function EntryCard({
                 type="button"
                 className="entry-mood-tag"
                 onClick={() => onTagClick?.(clean)}
+                title={`#${clean} 모아보기`}
                 style={{
-                  cursor: onTagClick ? 'pointer' : 'default', background: 'rgba(125, 160, 250, 0.12)',
-                  color: 'var(--accent, #4a75e6)', border: '1px solid rgba(125, 160, 250, 0.25)',
-                  borderRadius: '16px', padding: '0.25rem 0.65rem', fontSize: '0.85rem', fontWeight: 600,
+                  cursor: onTagClick ? 'pointer' : 'default',
+                  background: 'rgba(125, 160, 250, 0.12)',
+                  color: 'var(--accent, #4a75e6)',
+                  border: '1px solid rgba(125, 160, 250, 0.25)',
+                  borderRadius: '16px',
+                  padding: '0.25rem 0.65rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
                 }}
               >
                 #{clean}
@@ -214,57 +195,58 @@ export default function EntryCard({
 
       {editing ? (
         <EntryEditor
-          date={date} memberId={memberId} initialEntry={entry} initialSha={sha} parentEntry={parentEntry}
-          subIndex={subIndex} onSaved={() => { setEditing(false); onUpdated?.(); }} onCancel={() => setEditing(false)}
+          date={date}
+          memberId={memberId}
+          initialEntry={entry}
+          initialSha={sha}
+          parentEntry={parentEntry}
+          subIndex={subIndex}
+          onSaved={() => {
+            setEditing(false)
+            onUpdated?.()
+          }}
+          onCancel={() => setEditing(false)}
         />
       ) : (
         <>
           <div className="checklist-row readonly">
             {getChecklistFields(author).map((f) => {
               const on = !!entry.checklist?.[f.key]
-              return <span key={f.key} className={`chip checklist-status ${on ? 'on' : 'off'}`}>{f.label}:{on ? 'O' : 'X'}</span>
+              return (
+                <span key={f.key} className={`chip checklist-status ${on ? 'on' : 'off'}`}>
+                  {f.label}:{on ? 'O' : 'X'}
+                </span>
+              )
             })}
             {sleepHours != null && <span className="chip checklist-status">{sleepHours}시간 수면</span>}
           </div>
-
-          <div
-            onClick={triggerDetailView}
-            style={{ cursor: !isDetailView ? 'pointer' : 'default' }}
-            title={!isDetailView ? '클릭해서 단독 페이지로 보기' : ''}
-          >
-            {entry.content ? (
-              <p className="entry-content">{entry.content}</p>
-            ) : (
-              <p className="entry-content empty">글 없이 체크리스트만 기록했어요.</p>
-            )}
-            {images.length > 0 && (
-              <div className="entry-image-grid">
-                {images.map((path) => (
-                  <button
-                    type="button"
-                    key={path}
-                    className="entry-image-btn"
-                    onClick={(e) => { e.stopPropagation(); setLightboxPath(path); }}
-                  >
-                    <RemoteImage path={path} className="entry-image" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {entry.content ? (
+            <p className="entry-content">{entry.content}</p>
+          ) : (
+            <p className="entry-content empty">글 없이 체크리스트만 기록했어요.</p>
+          )}
+          {images.length > 0 && (
+            <div className="entry-image-grid">
+              {images.map((path) => (
+                <button
+                  type="button"
+                  key={path}
+                  className="entry-image-btn"
+                  onClick={() => setLightboxPath(path)}
+                  aria-label="사진 크게 보기"
+                >
+                  <RemoteImage path={path} className="entry-image" />
+                </button>
+              ))}
+            </div>
+          )}
         </>
       )}
 
       <ReactionBar entry={entry} onToggle={handleToggleReaction} />
 
       <div className="comment-section">
-        <CommentList 
-          comments={entry.comments} 
-          onDelete={handleDeleteComment} 
-          onUpdate={handleUpdateComment} 
-          onCommentClick={triggerDetailView} 
-          onImageClick={(path) => setLightboxPath(path)}
-        />
+        <CommentList comments={entry.comments} onDelete={handleDeleteComment} onUpdate={handleUpdateComment} />
         <CommentForm onSubmit={handleAddComment} />
       </div>
 
