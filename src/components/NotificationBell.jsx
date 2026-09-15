@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { loadIndex, getEntry } from '../lib/dataModel.js'
 
-export default function NotificationBell({ onSelectDate }) {
+// align prop 추가: 'left'면 오른쪽으로 펴지고, 'right'면 왼쪽으로 펴짐
+export default function NotificationBell({ onSelectDate, align = 'right' }) {
   const auth = useAuth()
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
@@ -13,7 +14,6 @@ export default function NotificationBell({ onSelectDate }) {
 
   const myId = auth.currentMember?.id
 
-  // 내 글에 달린 댓글 + 내가 참여(댓글)한 글에 달린 새 댓글 탐색
   const checkNotifications = async () => {
     if (!myId || !auth.client) return
     try {
@@ -38,10 +38,8 @@ export default function NotificationBell({ onSelectDate }) {
             const isMyPost = authorId === myId
             const haveICommented = comments.some((c) => c.author === myId)
 
-            // 내 글이거나 내가 댓글을 단 적이 있는 글인 경우만 알림 대상
             if (isMyPost || haveICommented) {
               comments.forEach((c) => {
-                // 본인이 작성한 댓글은 알림 제외
                 if (c.author !== myId) {
                   const postAuthorMember = auth.members.find((m) => m.id === authorId)
                   const postAuthorName = postAuthorMember?.displayName || authorId
@@ -62,7 +60,6 @@ export default function NotificationBell({ onSelectDate }) {
         }
       }
 
-      // 최신 댓글순 정렬
       newNotis.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       setNotifications(newNotis)
     } catch (e) {
@@ -74,7 +71,6 @@ export default function NotificationBell({ onSelectDate }) {
     checkNotifications()
   }, [myId, auth.client])
 
-  // 외부 클릭 시 닫기
   useEffect(() => {
     function handleClickOutside(e) {
       if (popoverRef.current && !popoverRef.current.contains(e.target)) {
@@ -87,7 +83,6 @@ export default function NotificationBell({ onSelectDate }) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [open])
 
-  // 안 읽은 알림 개수
   const unreadCount = useMemo(() => {
     return notifications.filter((n) => new Date(n.createdAt) > new Date(lastReadTime)).length
   }, [notifications, lastReadTime])
@@ -156,7 +151,9 @@ export default function NotificationBell({ onSelectDate }) {
           style={{
             position: 'absolute',
             top: 'calc(100% + 8px)',
-            right: 0,
+            // 전달받은 align 값에 따라 펼쳐지는 방향 결정!
+            right: align === 'right' ? 0 : 'auto',
+            left: align === 'left' ? 0 : 'auto',
             width: '290px',
             maxHeight: '380px',
             overflowY: 'auto',

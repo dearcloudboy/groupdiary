@@ -20,17 +20,35 @@ export default function Layout({ activeMemberId, onSelectMember, onOpenSettings,
 
   return (
     <div className="app-shell" style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
-      {/* 모바일 반응형을 위한 스타일 (별도 CSS 수정 없이 여기서 바로 처리) */}
       <style>{`
         .mobile-header { display: none; }
         .pc-bell { display: block; }
         .mobile-overlay { display: none; }
 
+        /* 기본적으로 사이드바를 위아래로 쌓이게(column) 강제 고정 */
+        .sidebar {
+          display: flex;
+          flex-direction: column;
+        }
+        .sidebar-top {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+        .member-nav {
+          display: flex;
+          flex-direction: column;
+        }
+        .sidebar-bottom {
+          display: flex;
+          flex-direction: column;
+          margin-top: auto;
+        }
+
         @media (max-width: 768px) {
           .app-shell { flex-direction: column !important; }
           .main-area { width: 100% !important; padding: 1rem !important; }
           
-          /* 모바일 상단 헤더 */
           .mobile-header {
             display: flex;
             justify-content: space-between;
@@ -44,24 +62,47 @@ export default function Layout({ activeMemberId, onSelectMember, onOpenSettings,
             z-index: 900;
           }
 
-          /* 사이드바를 서랍장(Drawer) 형태로 변환 */
+          /* 기존 app.css의 가로 배치(row)를 무시하고 완벽한 세로형 모바일 서랍으로 강제 변환 */
           .sidebar {
             position: fixed !important;
-            top: 0;
-            left: 0;
-            bottom: 0;
+            top: 0 !important;
+            left: 0 !important;
+            bottom: 0 !important;
             width: 260px !important;
+            height: 100vh !important;
             z-index: 1000 !important;
             background: #fff !important;
             box-shadow: 2px 0 15px rgba(0,0,0,0.1);
             transform: translateX(${mobileOpen ? '0' : '-100%'});
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding-top: 1rem !important;
+            padding: 1.5rem 1rem !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+
+          .sidebar-top {
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 !important;
+          }
+
+          .member-nav {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.3rem !important;
+          }
+
+          .sidebar-bottom {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+            margin-top: auto !important; /* 설정, 로그아웃을 맨 아래로 밀어냄 */
+            border-top: 1px solid #eee;
+            padding-top: 1rem;
           }
 
           .pc-bell { display: none; }
           
-          /* 배경 어둡게 */
           .mobile-overlay {
             display: ${mobileOpen ? 'block' : 'none'};
             position: fixed;
@@ -81,13 +122,13 @@ export default function Layout({ activeMemberId, onSelectMember, onOpenSettings,
           ☰
         </button>
         <strong style={{ fontSize: '1.2rem', color: '#333' }} onClick={handleHomeClick}>{SITE_TITLE}</strong>
-        <NotificationBell onSelectDate={handleHomeClick} />
+        <NotificationBell onSelectDate={handleHomeClick} align="right" />
       </header>
 
       {/* 모바일에서 사이드바 열렸을 때 뒷배경 */}
       <div className="mobile-overlay" onClick={() => setMobileOpen(false)} />
 
-      {/* 메인 레이아웃 (사이드바 + 콘텐츠) */}
+      {/* 메인 레이아웃 */}
       <div style={{ display: 'flex', flex: 1 }}>
         <aside className="sidebar">
           <div className="sidebar-top">
@@ -96,13 +137,12 @@ export default function Layout({ activeMemberId, onSelectMember, onOpenSettings,
                 className="logo" 
                 onClick={handleHomeClick} 
                 title="홈으로 돌아가기" 
-                style={{ background: 'none', border: 'none', fontSize: '1.4rem', fontWeight: 800, cursor: 'pointer', color: '#333', padding: 0 }}
+                style={{ background: 'none', border: 'none', fontSize: '1.4rem', fontWeight: 800, cursor: 'pointer', color: '#333', padding: 0, whiteSpace: 'nowrap' }}
               >
                 {SITE_TITLE}
               </button>
-              {/* PC 전용 알림 벨 (사이드바 로고 우측) */}
               <div className="pc-bell">
-                <NotificationBell onSelectDate={handleHomeClick} />
+                <NotificationBell onSelectDate={handleHomeClick} align="left" />
               </div>
             </div>
 
