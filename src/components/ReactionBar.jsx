@@ -74,7 +74,7 @@ export default function ReactionBar({ entry, onToggle }) {
   }
 
   return (
-    <div className="reaction-bar">
+    <div className="reaction-bar" style={{ position: 'relative' }}>
       
       <style>{`
         .custom-emoji-picker .EmojiPickerReact {
@@ -88,11 +88,12 @@ export default function ReactionBar({ entry, onToggle }) {
           font-family: inherit !important;
         }
 
-        /* 모바일 화면 밖으로 튀어나가지 않도록 반응형 위치 제어 */
-        @media (max-width: 480px) {
+        /* 모바일 화면에서는 팝업이 화면 왼쪽 밖으로 튀어나가지 않도록 안전하게 위치 고정 */
+        @media (max-width: 640px) {
           .reaction-picker-smart {
-            left: auto !important;
-            right: 0 !important;
+            left: 0 !important;
+            right: auto !important;
+            max-width: calc(100vw - 60px) !important;
           }
         }
       `}</style>
