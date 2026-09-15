@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
-  deleteEntry, getChecklistFields, imagePath, makeCommentId, saveEntry, toggleReaction
+  deleteEntry, getChecklistFields, imagePath, makeCommentId, saveEntry, toggleReaction, withNewComment, withoutComment, withUpdatedComment,
 } from '../lib/dataModel.js'
 import Avatar from './Avatar.jsx'
 import RemoteImage from './RemoteImage.jsx'
@@ -10,8 +10,6 @@ import ReactionBar from './ReactionBar.jsx'
 import CommentList from './CommentList.jsx'
 import CommentForm from './CommentForm.jsx'
 import EntryEditor from './EntryEditor.jsx'
-
-const locallyDeletedComments = new Set()
 
 function cleanTag(t) {
   if (!t) return ''
@@ -52,10 +50,7 @@ export default function EntryCard({
   const isMine = auth.currentMember?.id === memberId
   const moodTags = entry.moodTags || []
 
-  const activeComments = (entry.comments || []).filter(c => !locallyDeletedComments.has(c.id))
-
-  // 💡 notifyParent가 true일 때만 부모 피드를 리로드(스크롤 튐 방지의 핵심)
-  async function persist(nextEntry, notifyParent = true) {
+  async function persist(nextEntry) {
     let payload = null
     if (parentEntry && parentEntry.subEntries && parentEntry.subEntries.length > 0) {
       const list = [...parentEntry.subEntries]
@@ -66,28 +61,23 @@ export default function EntryCard({
     }
 
     const { entry: saved, sha: nextSha } = await saveEntry(auth.client, date, memberId, payload, sha)
-    setEntry(saved || nextEntry)
+    setEntry(nextEntry)
     setSha(nextSha)
-    if (notifyParent) {
-      onUpdated?.()
-    }
+    onUpdated?.()
   }
 
-  // 💡 반응 누를 때는 부모 피드를 리로드하지 않고 내 카드만 조용히 업데이트 후 백그라운드 저장!
   async function handleToggleReaction(emoji) {
     if (busy) return
-    const prevEntry = entry
+    setBusy(true)
+    const prev = entry
     const optimistic = toggleReaction(entry, emoji, auth.currentMember.id)
-    
-    // 화면에 즉시 반영
     setEntry(optimistic)
-
     try {
-      // 깃허브에는 백그라운드로 저장하되, 부모 피드 리로드 신호(false)는 꺼서 스크롤 고정
-      await persist(optimistic, false)
+      await persist(optimistic)
     } catch (e) {
-      setEntry(prevEntry)
-      window.alert('반응을 반영하지 못했어요.')
+      setEntry(prev)
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -117,9 +107,8 @@ export default function EntryCard({
       image: imgPath,
       createdAt: new Date().toISOString(),
     }
-    
-    const nextEntry = { ...entry, comments: [...(entry.comments || []), comment] }
-    await persist(nextEntry, true)
+    const nextEntry = withNewComment(entry, comment)
+    await persist(nextEntry)
     setBusy(false)
   }
 
@@ -128,9 +117,8 @@ export default function EntryCard({
     if (!window.confirm('이 댓글을 삭제할까요?')) return
     setBusy(true)
     try {
-      locallyDeletedComments.add(commentId)
-      const nextEntry = { ...entry, comments: (entry.comments || []).filter(c => c.id !== commentId) }
-      await persist(nextEntry, true)
+      const nextEntry = withoutComment(entry, commentId)
+      await persist(nextEntry)
     } catch (e) {
       window.alert('댓글 삭제에 실패했어요.')
     } finally {
@@ -142,11 +130,8 @@ export default function EntryCard({
     if (busy) return
     setBusy(true)
     try {
-      const nextEntry = {
-        ...entry,
-        comments: (entry.comments || []).map(c => c.id === commentId ? { ...c, text: newText } : c)
-      }
-      await persist(nextEntry, true)
+      const nextEntry = withUpdatedComment(entry, commentId, newText)
+      await persist(nextEntry)
     } catch (e) {
       window.alert('댓글 수정에 실패했어요.')
     } finally {
@@ -274,7 +259,7 @@ export default function EntryCard({
 
       <div className="comment-section">
         <CommentList 
-          comments={activeComments} 
+          comments={entry.comments} 
           onDelete={handleDeleteComment} 
           onUpdate={handleUpdateComment} 
           onCommentClick={triggerDetailView} 
