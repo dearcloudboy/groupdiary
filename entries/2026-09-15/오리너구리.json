@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T01:37:21.961Z",
-  "updatedAt": "2026-09-15T01:37:25.618Z",
+  "updatedAt": "2026-09-15T01:39:06.755Z",
   "subEntries": [
     {
       "id": "844c58fe-b509-4c7c-9c76-c7d544875b60",
@@ -28,7 +28,15 @@
         "글을쓰자": false
       },
       "reactions": {},
-      "comments": [],
+      "comments": [
+        {
+          "id": "78561aec-b1b1-4847-b586-5f3d548cbd13",
+          "author": "서리",
+          "text": "글을쓰자 X 뭔데요",
+          "image": null,
+          "createdAt": "2026-09-15T01:39:06.754Z"
+        }
+      ],
       "createdAt": "2026-09-15T01:37:21.961Z",
       "updatedAt": "2026-09-15T01:37:25.618Z"
     }
