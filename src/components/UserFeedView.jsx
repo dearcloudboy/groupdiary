@@ -30,7 +30,7 @@ export default function UserFeedView({ memberId }) {
   const [entriesByDate, setEntriesByDate] = useState({})
   const [loading, setLoading] = useState(true)
   const [selectedTag, setSelectedTag] = useState(null)
-  const [sortBy, setSortBy] = useState('activity')
+  const [sortBy, setSortBy] = useState('activity') // 'activity' vs 'created'
 
   const reloadData = () => {
     let cancelled = false
@@ -54,6 +54,7 @@ export default function UserFeedView({ memberId }) {
     return reloadData()
   }, [memberId, auth.client])
 
+  // 태그 목록 추출
   const allTags = useMemo(() => {
     const set = new Set()
     Object.values(entriesByDate).forEach((slot) => {
@@ -72,6 +73,7 @@ export default function UserFeedView({ memberId }) {
     return Array.from(set)
   }, [entriesByDate])
 
+  // 정렬 및 필터링 적용된 글 목록
   const displayedEntries = useMemo(() => {
     const result = []
     dates.forEach((d) => {
@@ -113,6 +115,7 @@ export default function UserFeedView({ memberId }) {
 
   return (
     <div className="user-feed-view" style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.3rem', width: '100%' }}>
+      {/* 1. 유저 헤더 */}
       <header
         style={{
           display: 'flex',
@@ -137,9 +140,52 @@ export default function UserFeedView({ memberId }) {
         </div>
       </header>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
+      {/* 2. 컨트롤 영역: 정렬 (위) -> 태그 (아래) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', background: 'rgba(255, 255, 255, 0.4)', padding: '1rem', borderRadius: '16px' }}>
+        
+        {/* 정렬 토글 */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.3rem', background: 'rgba(0,0,0,0.05)', padding: '0.25rem', borderRadius: '12px' }}>
+            <button
+              type="button"
+              onClick={() => setSortBy('activity')}
+              style={{
+                padding: '0.3rem 0.6rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: sortBy === 'activity' ? '#fff' : 'transparent',
+                fontWeight: sortBy === 'activity' ? 700 : 500,
+                color: sortBy === 'activity' ? 'var(--accent, #2b56cc)' : '#666',
+                boxShadow: sortBy === 'activity' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+              }}
+            >
+              🔥 최신 활동순
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortBy('created')}
+              style={{
+                padding: '0.3rem 0.6rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: sortBy === 'created' ? '#fff' : 'transparent',
+                fontWeight: sortBy === 'created' ? 700 : 500,
+                color: sortBy === 'created' ? 'var(--accent, #2b56cc)' : '#666',
+                boxShadow: sortBy === 'created' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+              }}
+            >
+              ⏱️ 작성순
+            </button>
+          </div>
+        </div>
+
+        {/* 태그 리스트 */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#666' }}>🏷️ 태그:</span>
+          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#666', marginRight: '0.2rem' }}>🏷️ 태그:</span>
           <button
             type="button"
             onClick={() => setSelectedTag(null)}
@@ -179,43 +225,9 @@ export default function UserFeedView({ memberId }) {
             )
           })}
         </div>
-
-        <div style={{ display: 'flex', gap: '0.3rem', background: 'rgba(0,0,0,0.05)', padding: '0.25rem', borderRadius: '12px' }}>
-          <button
-            type="button"
-            onClick={() => setSortBy('activity')}
-            style={{
-              padding: '0.3rem 0.6rem',
-              borderRadius: '8px',
-              border: 'none',
-              background: sortBy === 'activity' ? '#fff' : 'transparent',
-              fontWeight: sortBy === 'activity' ? 700 : 500,
-              color: sortBy === 'activity' ? 'var(--accent, #2b56cc)' : '#666',
-              fontSize: '0.78rem',
-              cursor: 'pointer',
-            }}
-          >
-            🔥 최신 활동순
-          </button>
-          <button
-            type="button"
-            onClick={() => setSortBy('created')}
-            style={{
-              padding: '0.3rem 0.6rem',
-              borderRadius: '8px',
-              border: 'none',
-              background: sortBy === 'created' ? '#fff' : 'transparent',
-              fontWeight: sortBy === 'created' ? 700 : 500,
-              color: sortBy === 'created' ? 'var(--accent, #2b56cc)' : '#666',
-              fontSize: '0.78rem',
-              cursor: 'pointer',
-            }}
-          >
-            ⏱️ 최초 작성순
-          </button>
-        </div>
       </div>
 
+      {/* 3. 일기 카드 리스트 */}
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="card skeleton-card" />
@@ -240,7 +252,7 @@ export default function UserFeedView({ memberId }) {
               onTagClick={(t) => setSelectedTag(cleanTag(t))}
               onUpdated={reloadData}
               onDeleted={reloadData}
-              onOpenDetail={(entryInfo) => onChanged?.(entryInfo)}
+              onOpenDetail={(entryInfo) => auth.onOpenDetail?.(entryInfo)}
             />
           ))}
         </div>
