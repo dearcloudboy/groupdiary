@@ -11,6 +11,7 @@ function cleanTag(t) {
   return String(t).replace(/^#+/, '').trim()
 }
 
+// 글 작성, 수정, 마지막 댓글 시간 중 가장 최근 시간을 계산 (끌어올림용)
 function getLatestActivityTimestamp(entry, fallbackDate) {
   const times = [
     new Date(entry.createdAt || fallbackDate).getTime(),
@@ -28,7 +29,7 @@ export default function DualEntryView({ date, onChanged }) {
   const auth = useAuth()
   const [slots, setSlots] = useState({})
   const [addingFor, setAddingFor] = useState(null)
-  const [sortBy, setSortBy] = useState('activity') 
+  const [sortBy, setSortBy] = useState('activity') // 'activity': 최신활동순, 'created': 작성순
   
   const [selectedTag, setSelectedTag] = useState(null)
   const [allEntriesMap, setAllEntriesMap] = useState({})
@@ -199,7 +200,7 @@ export default function DualEntryView({ date, onChanged }) {
                 onMouseEnter={(e) => (e.target.style.background = '#fff')}
                 onMouseLeave={(e) => (e.target.style.background = 'rgba(255, 255, 255, 0.8)')}
               >
-                ✍️ 새로운 {DIARY_WORD} 남기기
+                + {DIARY_WORD}
               </button>
             )
           }
@@ -231,8 +232,8 @@ export default function DualEntryView({ date, onChanged }) {
       {/* 2. 컨트롤 영역: 정렬 (위) -> 태그 (아래) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', background: 'rgba(255, 255, 255, 0.4)', padding: '1rem', borderRadius: '16px' }}>
         
-        {/* 정렬 토글 */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        {/* 정렬 토글 (좌측 정렬로 수정) */}
+        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
           <div style={{ display: 'flex', gap: '0.3rem', background: 'rgba(0,0,0,0.05)', padding: '0.25rem', borderRadius: '12px' }}>
             <button
               type="button"

@@ -30,7 +30,7 @@ export default function UserFeedView({ memberId }) {
   const [entriesByDate, setEntriesByDate] = useState({})
   const [loading, setLoading] = useState(true)
   const [selectedTag, setSelectedTag] = useState(null)
-  const [sortBy, setSortBy] = useState('activity') // 'activity' vs 'created'
+  const [sortBy, setSortBy] = useState('activity')
 
   const reloadData = () => {
     let cancelled = false
@@ -54,7 +54,6 @@ export default function UserFeedView({ memberId }) {
     return reloadData()
   }, [memberId, auth.client])
 
-  // 태그 목록 추출
   const allTags = useMemo(() => {
     const set = new Set()
     Object.values(entriesByDate).forEach((slot) => {
@@ -73,7 +72,6 @@ export default function UserFeedView({ memberId }) {
     return Array.from(set)
   }, [entriesByDate])
 
-  // 정렬 및 필터링 적용된 글 목록
   const displayedEntries = useMemo(() => {
     const result = []
     dates.forEach((d) => {
@@ -143,8 +141,8 @@ export default function UserFeedView({ memberId }) {
       {/* 2. 컨트롤 영역: 정렬 (위) -> 태그 (아래) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', background: 'rgba(255, 255, 255, 0.4)', padding: '1rem', borderRadius: '16px' }}>
         
-        {/* 정렬 토글 */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        {/* 정렬 토글 (좌측 정렬로 수정) */}
+        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
           <div style={{ display: 'flex', gap: '0.3rem', background: 'rgba(0,0,0,0.05)', padding: '0.25rem', borderRadius: '12px' }}>
             <button
               type="button"
