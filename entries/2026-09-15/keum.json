@@ -16,7 +16,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T09:41:56.173Z",
-  "updatedAt": "2026-09-15T10:14:03.259Z",
+  "updatedAt": "2026-09-15T10:14:10.472Z",
   "subEntries": [
     {
       "id": "d1b96b89-cb04-4fe3-9855-d51bc1167a2d",
@@ -33,7 +33,11 @@
         "끄적이기": true,
         "정병on": true
       },
-      "reactions": {},
+      "reactions": {
+        "custom:7c0bc378-b45c-4430-b965-d7862598e369": [
+          "서리"
+        ]
+      },
       "comments": [
         {
           "id": "00ff1b7e-dd4a-4e1c-a4b3-d2b4722efbaa",
