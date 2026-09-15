@@ -38,7 +38,7 @@
     }
   ],
   "createdAt": "2026-09-14T12:28:32.319Z",
-  "updatedAt": "2026-09-15T00:46:10.173Z",
+  "updatedAt": "2026-09-15T01:16:59.724Z",
   "subEntries": [
     {
       "date": "2026-09-14",
@@ -93,8 +93,8 @@
       "images": [],
       "checklist": {
         "sleepHours": null,
-        "연성했나요": false,
-        "정신병있나요": true
+        "연성": false,
+        "정신병": true
       },
       "reactions": {
         "❤️": [
@@ -103,7 +103,7 @@
       },
       "comments": [],
       "createdAt": "2026-09-14T13:40:05.636Z",
-      "updatedAt": "2026-09-14T15:31:02.116Z"
+      "updatedAt": "2026-09-15T01:16:59.724Z"
     }
   ]
 }
