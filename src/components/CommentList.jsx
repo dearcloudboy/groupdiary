@@ -33,6 +33,19 @@ export default function CommentList({ comments = [], onDelete, onUpdate, onComme
 
   return (
     <div className="comment-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '0.8rem' }}>
+      
+      {/* 컴포넌트가 인라인 스타일을 무시하는 경우를 대비해 CSS로 강력하게 덮어버립니다! */}
+      <style>{`
+        .force-comment-thumb {
+          width: 120px !important;
+          height: 120px !important;
+          object-fit: cover !important;
+          border-radius: 8px !important;
+          display: block !important;
+          margin: 0 !important;
+        }
+      `}</style>
+
       {!showAll && totalCount > 5 && (
         <button
           type="button"
@@ -91,7 +104,6 @@ export default function CommentList({ comments = [], onDelete, onUpdate, onComme
                 </p>
               )}
 
-              {/* 댓글 사진을 본문처럼 예쁘게 자르고 버튼으로 감싸서 클릭하면 팝업되게 수정했습니다! */}
               {c.image && !isEditing && (
                 <div style={{ marginTop: '0.6rem' }}>
                   <button
@@ -103,9 +115,10 @@ export default function CommentList({ comments = [], onDelete, onUpdate, onComme
                     }}
                     title="사진 크게 보기"
                   >
+                    {/* 바로 여기에 강력한 강제 CSS 클래스(force-comment-thumb)를 붙였습니다! */}
                     <RemoteImage 
                       path={c.image} 
-                      style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '8px', display: 'block' }} 
+                      className="force-comment-thumb" 
                     />
                   </button>
                 </div>

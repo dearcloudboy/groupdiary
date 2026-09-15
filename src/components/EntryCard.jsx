@@ -16,37 +16,13 @@ function cleanTag(t) {
   return String(t).replace(/^#+/, '').trim()
 }
 
-// 브라우저 자체 기능(Canvas)을 이용해 폰 카메라의 거대한 사진을 빠르고 안전하게 압축하는 함수
-function compressImage(file, maxWidth = 1000, quality = 0.8) {
+// 은솔님 요청대로 파일 용량 리사이징은 뺐습니다! 순수하게 Base64로만 텍스트화해서 넘깁니다.
+function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = reject
     reader.readAsDataURL(file)
-    reader.onload = (event) => {
-      const img = new Image()
-      img.src = event.target.result
-      img.onload = () => {
-        let width = img.width
-        let height = img.height
-
-        // 가로가 maxWidth(1000px)보다 크면 비율에 맞춰서 줄임
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width)
-          width = maxWidth
-        }
-
-        const canvas = document.createElement('canvas')
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(img, 0, 0, width, height)
-
-        const dataUrl = canvas.toDataURL('image/jpeg', quality)
-        const base64 = dataUrl.split(',')[1]
-        resolve({ base64, extension: 'jpg' })
-      }
-      img.onerror = (err) => reject(err)
-    }
-    reader.onerror = (err) => reject(err)
   })
 }
 
@@ -111,12 +87,16 @@ export default function EntryCard({
     if (imageFile) {
       try {
         setBusy(true)
-        const { base64, extension } = await compressImage(imageFile, 1000, 0.8)
+        // 원본 사진을 그대로 처리 (에러 원인 제거)
+        const dataUrl = await fileToBase64(imageFile)
+        const base64Data = dataUrl.split(',')[1]
+        const extension = imageFile.name ? imageFile.name.split('.').pop() : 'jpg'
+        
         imgPath = imagePath(date, auth.currentMember.id, `comment.${extension}`)
-        await auth.client.putBase64File(imgPath, base64, { message: `댓글 이미지 (${date})` })
+        await auth.client.putBase64File(imgPath, base64Data, { message: `댓글 이미지 (${date})` })
       } catch (error) {
-        console.error("이미지 압축 실패:", error)
-        window.alert('이미지를 처리하는 중 오류가 발생했습니다.')
+        console.error("이미지 업로드 실패:", error)
+        window.alert('이미지를 업로드하는 중 오류가 발생했습니다.')
         setBusy(false)
         return
       }
@@ -280,7 +260,6 @@ export default function EntryCard({
       <ReactionBar entry={entry} onToggle={handleToggleReaction} />
 
       <div className="comment-section">
-        {/* CommentList에 사진을 클릭했을 때 Lightbox를 여는 onImageClick 속성을 추가했습니다 */}
         <CommentList 
           comments={entry.comments} 
           onDelete={handleDeleteComment} 
