@@ -7,13 +7,13 @@
   "images": [],
   "checklist": {
     "sleepHours": null,
-    "연성했나요": false,
-    "정신병있나요": true
+    "연성": false,
+    "정신병": true
   },
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-14T16:15:23.113Z",
-  "updatedAt": "2026-09-14T16:15:24.131Z",
+  "updatedAt": "2026-09-15T01:16:45.542Z",
   "subEntries": [
     {
       "id": "b922a36f-5ec7-480f-8519-15e0f328bd99",
@@ -24,13 +24,13 @@
       "images": [],
       "checklist": {
         "sleepHours": null,
-        "연성했나요": false,
-        "정신병있나요": true
+        "연성": false,
+        "정신병": true
       },
       "reactions": {},
       "comments": [],
       "createdAt": "2026-09-14T16:15:23.113Z",
-      "updatedAt": "2026-09-14T16:15:24.131Z"
+      "updatedAt": "2026-09-15T01:16:45.542Z"
     }
   ]
 }
