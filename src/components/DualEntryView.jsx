@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getEntry, loadIndex, todayStr } from '../lib/dataModel.js'
+import { getEntry, loadIndex } from '../lib/dataModel.js'
 import { DIARY_WORD } from '../config.js'
 import EntryCard from './EntryCard.jsx'
 import EntryEditor from './EntryEditor.jsx'
@@ -11,7 +11,7 @@ function cleanTag(t) {
   return String(t).replace(/^#+/, '').trim()
 }
 
-// 글 작성, 수정, 마지막 댓글 시간 중 가장 최근 시간을 타임스탬프로 계산 (끌어올림용)
+// 글 작성, 수정, 마지막 댓글 시간 중 가장 최근 시간을 계산 (끌어올림용)
 function getLatestActivityTimestamp(entry, fallbackDate) {
   const times = [
     new Date(entry.createdAt || fallbackDate).getTime(),
@@ -25,16 +25,17 @@ function getLatestActivityTimestamp(entry, fallbackDate) {
   return Math.max(...times.filter((t) => !isNaN(t)))
 }
 
-export default function DualEntryView({ date, isDateFiltered = false, onClearDateFilter, onChanged }) {
+export default function DualEntryView({ date, onChanged }) {
   const auth = useAuth()
   const [slots, setSlots] = useState({})
   const [addingFor, setAddingFor] = useState(null)
-  const [sortBy, setSortBy] = useState('activity') // 'activity': 최신활동순(끌올), 'created': 작성시간순
+  const [sortBy, setSortBy] = useState('activity') // 'activity': 최신활동순, 'created': 작성순
   
   const [selectedTag, setSelectedTag] = useState(null)
   const [allEntriesMap, setAllEntriesMap] = useState({})
   const [loading, setLoading] = useState(true)
 
+  // 상단 글쓰기 영역을 위해 현재 선택된 date의 작성 여부 확인
   const loadData = useCallback(async () => {
     const newSlots = {}
     for (const m of auth.members) {
@@ -48,6 +49,7 @@ export default function DualEntryView({ date, isDateFiltered = false, onClearDat
     setSlots(newSlots)
   }, [auth.client, auth.members, date])
 
+  // 전체 피드 구성을 위해 모든 히스토리 로드
   const loadAllHistory = useCallback(async () => {
     setLoading(true)
     try {
@@ -131,7 +133,6 @@ export default function DualEntryView({ date, isDateFiltered = false, onClearDat
     return list
   }, [allEntriesMap, auth.members])
 
-  // 태그 필터링 시 표시할 목록
   const displayedTaggedEntries = useMemo(() => {
     if (!selectedTag) return []
     const filtered = flattenedAllEntries.filter((item) => {
@@ -145,7 +146,6 @@ export default function DualEntryView({ date, isDateFiltered = false, onClearDat
     )
   }, [selectedTag, flattenedAllEntries, sortBy])
 
-  // 홈 전체 기본 피드
   const homeFeedEntries = useMemo(() => {
     const list = [...flattenedAllEntries]
     return list.sort((a, b) =>
@@ -154,42 +154,6 @@ export default function DualEntryView({ date, isDateFiltered = false, onClearDat
         : b.createdTimestamp - a.createdTimestamp
     )
   }, [flattenedAllEntries, sortBy])
-
-  // 특정 날짜를 선택했을 때의 해당 날짜 글 목록
-  const dateSpecificEntries = useMemo(() => {
-    const list = []
-    auth.members.forEach((m) => {
-      const slot = slots[m.id]
-      if (!slot?.json) return
-
-      const subList = slot.json.subEntries && slot.json.subEntries.length > 0
-        ? slot.json.subEntries
-        : [slot.json]
-
-      subList.forEach((sub) => {
-        const originalIdx = slot.json.subEntries
-          ? slot.json.subEntries.findIndex((e) => e.id === sub.id)
-          : 0
-
-        list.push({
-          date: date,
-          memberId: m.id,
-          entry: sub,
-          subIndex: originalIdx >= 0 ? originalIdx : 0,
-          parentEntry: slot.json,
-          sha: slot.sha,
-          createdTimestamp: new Date(sub.createdAt || date).getTime(),
-          activityTimestamp: getLatestActivityTimestamp(sub, date),
-        })
-      })
-    })
-
-    return list.sort((a, b) =>
-      sortBy === 'activity'
-        ? b.activityTimestamp - a.activityTimestamp
-        : b.createdTimestamp - a.createdTimestamp
-    )
-  }, [slots, auth.members, date, sortBy])
 
   const handleTagClick = (rawTag) => {
     const target = cleanTag(rawTag)
@@ -203,8 +167,9 @@ export default function DualEntryView({ date, isDateFiltered = false, onClearDat
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
-      {/* 상단 컨트롤 바: 태그 + 정렬 전환 버튼 */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%', maxWidth: '680px', margin: '0 auto' }}>
+      
+      {/* 1. 상단 컨트롤 바: 태그 & 정렬 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
@@ -268,14 +233,95 @@ export default function DualEntryView({ date, isDateFiltered = false, onClearDat
                 cursor: 'pointer',
               }}
             >
-              ⏱️ 최초 작성순
+              ⏱️ 작성순
             </button>
           </div>
         </div>
       </div>
 
+      {/* 2. 상단 글쓰기 영역 (태그 필터가 없을 때만 노출) */}
+      {!selectedTag && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', marginBottom: '1rem' }}>
+          {auth.members.map((m) => {
+            const slot = slots[m.id]
+            const isMine = auth.currentMember?.id === m.id
+            const isAdding = addingFor === m.id
+
+            if (slot === undefined) return <div key={m.id} className="card skeleton-card" style={{ padding: '1.5rem' }} />
+
+            // 이미 해당 날짜에 글을 썼다면 피드에 나오므로 이 영역에서는 숨김!
+            if (slot?.json) return null
+
+            // 글을 아직 안 썼다면 글쓰기 에디터 또는 빈 슬롯 알림 표시
+            if (slot === null && !isAdding) {
+              return (
+                <EmptySlot
+                  key={m.id}
+                  member={m}
+                  date={date}
+                  onCreated={(newEntry, newSha) => {
+                    setSlots((prev) => ({ ...prev, [m.id]: { json: newEntry, sha: newSha } }))
+                    reloadAll()
+                  }}
+                />
+              )
+            }
+
+            if (isAdding) {
+              return (
+                <div key={m.id} className="card" style={{ padding: '1.5rem', background: '#fff', borderRadius: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
+                    <Avatar member={m} />
+                    <strong style={{ fontSize: '1rem' }}>{m.displayName}님의 새 {DIARY_WORD}</strong>
+                  </div>
+                  <EntryEditor
+                    date={date}
+                    memberId={m.id}
+                    initialEntry={null}
+                    initialSha={slot?.sha}
+                    parentEntry={slot?.json}
+                    onSaved={(savedEntry, savedSha) => {
+                      setAddingFor(null)
+                      setSlots((prev) => ({ ...prev, [m.id]: { json: savedEntry, sha: sha } }))
+                      reloadAll()
+                    }}
+                    onCancel={() => setAddingFor(null)}
+                  />
+                </div>
+              )
+            }
+
+            if (isMine && !isAdding) {
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  style={{
+                    width: '100%',
+                    padding: '0.85rem',
+                    borderRadius: '14px',
+                    border: '2px dashed var(--accent, #aaa)',
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    color: 'var(--accent, #333)',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '0.9rem',
+                  }}
+                  onClick={() => setAddingFor(m.id)}
+                >
+                  + {m.displayName}님 새 {DIARY_WORD} 추가하기
+                </button>
+              )
+            }
+
+            return null
+          })}
+        </div>
+      )}
+
+      {/* 3. 하단 메인 피드 영역 */}
       {selectedTag ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', maxWidth: '680px', margin: '0 auto', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.2rem' }}>
             <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--accent, #2b56cc)' }}>
               #{selectedTag} 모아보기 ({displayedTaggedEntries.length}개)
@@ -314,117 +360,8 @@ export default function DualEntryView({ date, isDateFiltered = false, onClearDat
             </div>
           )}
         </div>
-      ) : isDateFiltered ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '680px', margin: '0 auto', width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.2rem' }}>
-            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#333' }}>
-              📅 {date} 일기 목록
-            </span>
-            <button
-              type="button"
-              className="btn btn-ghost btn-small"
-              onClick={onClearDateFilter}
-              style={{ cursor: 'pointer', fontSize: '0.8rem' }}
-            >
-              전체 최신 피드로 보기 ↩
-            </button>
-          </div>
-
-          {dateSpecificEntries.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
-              {dateSpecificEntries.map((item, idx) => (
-                <EntryCard
-                  key={item.entry.id || `${item.memberId}-${idx}`}
-                  entry={item.entry}
-                  subIndex={item.subIndex}
-                  parentEntry={item.parentEntry}
-                  sha={item.sha}
-                  date={date}
-                  memberId={item.memberId}
-                  showDate={false}
-                  onTagClick={handleTagClick}
-                  onUpdated={reloadAll}
-                  onDeleted={reloadAll}
-                />
-              ))}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
-            {auth.members.map((m) => {
-              const slot = slots[m.id]
-              const isMine = auth.currentMember?.id === m.id
-              const isAdding = addingFor === m.id
-
-              if (slot === undefined) return <div key={m.id} className="card skeleton-card" />
-
-              if (slot === null && !isAdding) {
-                return (
-                  <EmptySlot
-                    key={m.id}
-                    member={m}
-                    date={date}
-                    onCreated={(newEntry, newSha) => {
-                      setSlots((prev) => ({ ...prev, [m.id]: { json: newEntry, sha: newSha } }))
-                      reloadAll()
-                    }}
-                  />
-                )
-              }
-
-              if (isAdding) {
-                return (
-                  <div key={m.id} className="card" style={{ padding: '1.5rem', background: '#fff', borderRadius: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
-                      <Avatar member={m} />
-                      <strong style={{ fontSize: '1rem' }}>{m.displayName}님의 새 {DIARY_WORD}</strong>
-                    </div>
-                    <EntryEditor
-                      date={date}
-                      memberId={m.id}
-                      initialEntry={null}
-                      initialSha={slot?.sha}
-                      parentEntry={slot?.json}
-                      onSaved={(savedEntry, savedSha) => {
-                        setAddingFor(null)
-                        setSlots((prev) => ({ ...prev, [m.id]: { json: savedEntry, sha: savedSha } }))
-                        reloadAll()
-                      }}
-                      onCancel={() => setAddingFor(null)}
-                    />
-                  </div>
-                )
-              }
-
-              if (isMine && !isAdding) {
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    style={{
-                      width: '100%',
-                      padding: '0.85rem',
-                      borderRadius: '14px',
-                      border: '2px dashed var(--accent, #aaa)',
-                      background: 'rgba(255, 255, 255, 0.8)',
-                      color: 'var(--accent, #333)',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                      fontSize: '0.9rem',
-                    }}
-                    onClick={() => setAddingFor(m.id)}
-                  >
-                    + {m.displayName}님 새 {DIARY_WORD} 추가하기
-                  </button>
-                )
-              }
-
-              return null
-            })}
-          </div>
-        </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', maxWidth: '680px', margin: '0 auto', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div className="card skeleton-card" />
@@ -465,7 +402,7 @@ function EmptySlot({ member, date, onCreated }) {
     return (
       <div className="card empty-slot" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.2rem' }}>
         <Avatar member={member} />
-        <p style={{ margin: 0, color: '#777' }}>{member.displayName}님이 아직 이 날의 {DIARY_WORD}를 쓰지 않았어요.</p>
+        <p style={{ margin: 0, color: '#777', fontSize: '0.9rem' }}>{member.displayName}님이 아직 이 날의 {DIARY_WORD}를 쓰지 않았어요.</p>
       </div>
     )
   }
@@ -474,7 +411,7 @@ function EmptySlot({ member, date, onCreated }) {
     <div className="card empty-slot mine" style={{ padding: '1.5rem' }}>
       <div className="entry-card-who" style={{ marginBottom: '1rem' }}>
         <Avatar member={member} />
-        <div className="entry-card-name">{member.displayName}</div>
+        <div className="entry-card-name" style={{ fontSize: '1.05rem' }}>{member.displayName}</div>
       </div>
       <EntryEditor
         date={date}
