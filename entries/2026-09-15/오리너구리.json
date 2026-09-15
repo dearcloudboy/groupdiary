@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T01:37:21.961Z",
-  "updatedAt": "2026-09-15T01:39:06.755Z",
+  "updatedAt": "2026-09-15T02:04:35.925Z",
   "subEntries": [
     {
       "id": "844c58fe-b509-4c7c-9c76-c7d544875b60",
@@ -35,6 +35,13 @@
           "text": "글을쓰자 X 뭔데요",
           "image": null,
           "createdAt": "2026-09-15T01:39:06.754Z"
+        },
+        {
+          "id": "a8941c09-bfb1-4b1f-a7e6-746711880eca",
+          "author": "은행",
+          "text": "안녕하세요 잘 부탁드려요",
+          "image": null,
+          "createdAt": "2026-09-15T02:04:35.925Z"
         }
       ],
       "createdAt": "2026-09-15T01:37:21.961Z",
