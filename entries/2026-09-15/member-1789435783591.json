@@ -7,15 +7,13 @@
   "images": [],
   "checklist": {
     "sleepHours": null,
-    "medication": false,
-    "outing": false,
-    "cleaning": false,
-    "delivery": false
+    "글을썼나요": false,
+    "정신병이왔나요": true
   },
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T01:36:59.864Z",
-  "updatedAt": "2026-09-15T01:37:35.053Z",
+  "updatedAt": "2026-09-15T01:39:28.703Z",
   "subEntries": [
     {
       "id": "1a85806d-bdfc-44d5-9053-fdec1b81f5ad",
@@ -26,15 +24,13 @@
       "images": [],
       "checklist": {
         "sleepHours": null,
-        "medication": false,
-        "outing": false,
-        "cleaning": false,
-        "delivery": false
+        "글을썼나요": false,
+        "정신병이왔나요": true
       },
       "reactions": {},
       "comments": [],
       "createdAt": "2026-09-15T01:36:59.864Z",
-      "updatedAt": "2026-09-15T01:37:35.053Z"
+      "updatedAt": "2026-09-15T01:39:28.703Z"
     }
   ]
 }
