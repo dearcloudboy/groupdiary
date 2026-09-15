@@ -10,10 +10,39 @@
     "성제복복쓰다듬기": true,
     "글을쓰자": false
   },
-  "reactions": {},
-  "comments": [],
+  "reactions": {
+    "❤️": [
+      "서리"
+    ],
+    "custom:37ff6ea0-45e9-46a0-b444-030626d0a92a": [
+      "서리"
+    ]
+  },
+  "comments": [
+    {
+      "id": "78561aec-b1b1-4847-b586-5f3d548cbd13",
+      "author": "서리",
+      "text": "글을쓰자 X 뭔데요",
+      "image": null,
+      "createdAt": "2026-09-15T01:39:06.754Z"
+    },
+    {
+      "id": "a8941c09-bfb1-4b1f-a7e6-746711880eca",
+      "author": "은행",
+      "text": "안녕하세요 잘 부탁드려요",
+      "image": null,
+      "createdAt": "2026-09-15T02:04:35.925Z"
+    },
+    {
+      "id": "a65d87ea-70bf-42f7-8288-c5a45a1557a5",
+      "author": "keum",
+      "text": "👋👋👋👋",
+      "image": null,
+      "createdAt": "2026-09-15T03:29:48.892Z"
+    }
+  ],
   "createdAt": "2026-09-15T01:37:21.961Z",
-  "updatedAt": "2026-09-15T03:29:48.892Z",
+  "updatedAt": "2026-09-15T10:45:44.253Z",
   "subEntries": [
     {
       "id": "844c58fe-b509-4c7c-9c76-c7d544875b60",
@@ -60,6 +89,23 @@
       ],
       "createdAt": "2026-09-15T01:37:21.961Z",
       "updatedAt": "2026-09-15T01:37:25.618Z"
+    },
+    {
+      "id": "4281aaf5-439a-487d-ae3c-9e82a65ae8aa",
+      "date": "2026-09-15",
+      "author": "오리너구리",
+      "moodTags": [],
+      "content": "배불르다.이제성제놀아줄시간~~\n오책추: 롤리타",
+      "images": [],
+      "checklist": {
+        "sleepHours": null,
+        "성제복복쓰다듬기": true,
+        "글을쓰자": true
+      },
+      "reactions": {},
+      "comments": [],
+      "createdAt": "2026-09-15T10:45:26.878Z",
+      "updatedAt": "2026-09-15T10:45:44.253Z"
     }
   ]
 }
