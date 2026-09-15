@@ -35,7 +35,6 @@ export default function DualEntryView({ date, onChanged }) {
   const [allEntriesMap, setAllEntriesMap] = useState({})
   const [loading, setLoading] = useState(true)
 
-  // 상단 내 글쓰기 영역을 위해 현재 선택된 date의 작성 여부 확인
   const loadData = useCallback(async () => {
     const newSlots = {}
     for (const m of auth.members) {
@@ -49,7 +48,6 @@ export default function DualEntryView({ date, onChanged }) {
     setSlots(newSlots)
   }, [auth.client, auth.members, date])
 
-  // 전체 피드 구성을 위해 모든 히스토리 로드
   const loadAllHistory = useCallback(async () => {
     setLoading(true)
     try {
@@ -239,13 +237,11 @@ export default function DualEntryView({ date, onChanged }) {
         </div>
       </div>
 
-      {/* 2. 상단 글쓰기 영역 (태그 필터가 없을 때만 노출) */}
+      {/* 2. 상단 글쓰기 버튼 / 에디터 영역 */}
       {!selectedTag && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', marginBottom: '1rem' }}>
           {auth.members.map((m) => {
             const isMine = auth.currentMember?.id === m.id
-            
-            // 다른 사람의 빈 슬롯이나 글쓰기 버튼은 아예 렌더링하지 않음
             if (!isMine) return null
 
             const slot = slots[m.id]
@@ -253,31 +249,35 @@ export default function DualEntryView({ date, onChanged }) {
 
             if (slot === undefined) return <div key={m.id} className="card skeleton-card" style={{ padding: '1.5rem' }} />
 
-            // 내가 이미 글을 썼고, 추가 작성 모드가 아니라면 "새 글 추가하기" 버튼만 띄움
-            if (slot?.json && !isAdding) {
+            // 클릭 전: 깔끔한 버튼만 노출
+            if (!isAdding) {
               return (
                 <button
                   key={m.id}
                   type="button"
                   style={{
                     width: '100%',
-                    padding: '0.85rem',
-                    borderRadius: '14px',
-                    border: '2px dashed var(--accent, #aaa)',
+                    padding: '1rem',
+                    borderRadius: '16px',
+                    border: '2px dashed var(--accent, #7da0fa)',
                     background: 'rgba(255, 255, 255, 0.8)',
-                    color: 'var(--accent, #333)',
+                    color: 'var(--accent, #2b56cc)',
                     cursor: 'pointer',
                     fontWeight: 'bold',
-                    fontSize: '0.9rem',
+                    fontSize: '0.95rem',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    transition: 'all 0.2s ease'
                   }}
                   onClick={() => setAddingFor(m.id)}
+                  onMouseEnter={(e) => (e.target.style.background = '#fff')}
+                  onMouseLeave={(e) => (e.target.style.background = 'rgba(255, 255, 255, 0.8)')}
                 >
-                  + {m.displayName}님 새 {DIARY_WORD} 추가하기
+                  + {DIARY_WORD}
                 </button>
               )
             }
 
-            // 아직 글을 안 썼거나, 추가 작성 모드일 때 에디터 표시
+            // 클릭 후: 에디터 쫙 펼쳐짐
             return (
               <div key={m.id} className="card" style={{ padding: '1.5rem', background: '#fff', borderRadius: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
@@ -295,7 +295,7 @@ export default function DualEntryView({ date, onChanged }) {
                     setSlots((prev) => ({ ...prev, [m.id]: { json: savedEntry, sha: savedSha } }))
                     reloadAll()
                   }}
-                  onCancel={slot?.json ? () => setAddingFor(null) : undefined}
+                  onCancel={() => setAddingFor(null)} // 취소 누르면 다시 버튼으로 돌아감
                 />
               </div>
             )
