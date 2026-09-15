@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T01:36:59.864Z",
-  "updatedAt": "2026-09-15T02:04:14.617Z",
+  "updatedAt": "2026-09-15T02:06:23.137Z",
   "subEntries": [
     {
       "id": "1a85806d-bdfc-44d5-9053-fdec1b81f5ad",
@@ -39,6 +39,9 @@
         ],
         "custom:3f11bcbd-ca31-4571-b521-a26afbfef29a": [
           "오리너구리"
+        ],
+        "custom:37ff6ea0-45e9-46a0-b444-030626d0a92a": [
+          "서리"
         ]
       },
       "comments": [
