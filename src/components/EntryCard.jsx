@@ -40,8 +40,7 @@ export default function EntryCard({
   const isMine = auth.currentMember?.id === memberId
   const moodTags = entry.moodTags || []
 
-  // 💡 notifyParent를 추가하여, 리액션 등 사소한 인터랙션 시 부모 피드 전체가 새로고침되는 것을 방지
-  async function persist(nextEntry, notifyParent = true) {
+  async function persist(nextEntry) {
     let payload = null
     if (parentEntry && parentEntry.subEntries && parentEntry.subEntries.length > 0) {
       const list = [...parentEntry.subEntries]
@@ -52,23 +51,23 @@ export default function EntryCard({
     }
 
     const { entry: saved, sha: nextSha } = await saveEntry(auth.client, date, memberId, payload, sha)
-    setEntry(saved || nextEntry)
+    setEntry(nextEntry)
     setSha(nextSha)
-    if (notifyParent) {
-      onUpdated?.()
-    }
+    onUpdated?.()
   }
 
-  // 💡 리액션 누를 때는 부모 피드를 리로드(새고)하지 않고 내 카드만 조용히 업데이트 후 백그라운드 저장
   async function handleToggleReaction(emoji) {
     if (busy) return
+    setBusy(true)
     const prev = entry
     const optimistic = toggleReaction(entry, emoji, auth.currentMember.id)
     setEntry(optimistic)
     try {
-      await persist(optimistic, false)
+      await persist(optimistic)
     } catch (e) {
       setEntry(prev)
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -87,7 +86,7 @@ export default function EntryCard({
       createdAt: new Date().toISOString(),
     }
     const nextEntry = withNewComment(entry, comment)
-    await persist(nextEntry, true)
+    await persist(nextEntry)
   }
 
   async function handleDeleteComment(commentId) {
@@ -96,7 +95,7 @@ export default function EntryCard({
     setBusy(true)
     try {
       const nextEntry = withoutComment(entry, commentId)
-      await persist(nextEntry, true)
+      await persist(nextEntry)
     } catch (e) {
       window.alert('댓글 삭제에 실패했어요.')
     } finally {
@@ -109,7 +108,7 @@ export default function EntryCard({
     setBusy(true)
     try {
       const nextEntry = withUpdatedComment(entry, commentId, newText)
-      await persist(nextEntry, true)
+      await persist(nextEntry)
     } catch (e) {
       window.alert('댓글 수정에 실패했어요.')
     } finally {
