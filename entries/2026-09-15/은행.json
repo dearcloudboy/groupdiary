@@ -17,7 +17,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T02:58:30.234Z",
-  "updatedAt": "2026-09-15T04:11:46.111Z",
+  "updatedAt": "2026-09-15T04:32:03.062Z",
   "subEntries": [
     {
       "id": "67fdfbe9-42ad-4647-be54-84edc0b473df",
@@ -40,7 +40,8 @@
           "keum"
         ],
         "custom:bf1f8a30-6ea4-4ca7-b8e4-3ac6be69a77b": [
-          "keum"
+          "keum",
+          "member-1789435783591"
         ],
         "custom:7c0bc378-b45c-4430-b965-d7862598e369": [
           "서리"
