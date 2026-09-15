@@ -2,13 +2,13 @@ import React, { useEffect, useRef, useState } from 'react'
 import { REACTIONS, addCustomReaction, makeCommentId, removeCustomReaction } from '../lib/dataModel.js'
 import { resizeStickerToDataUrl } from '../lib/image.js'
 import { useAuth } from '../context/AuthContext.jsx'
-import EmojiPicker from 'emoji-picker-react' // 새로 설치한 이모지 키보드!
+import EmojiPicker from 'emoji-picker-react'
 
 export default function ReactionBar({ entry, onToggle }) {
   const auth = useAuth()
   const myId = auth.currentMember?.id
   const [open, setOpen] = useState(false)
-  const [pending, setPending] = useState(null) // { file, preview, name }
+  const [pending, setPending] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const [removingCustomId, setRemovingCustomId] = useState(null)
@@ -27,7 +27,6 @@ export default function ReactionBar({ entry, onToggle }) {
     return () => document.removeEventListener('mousedown', handleOutside)
   }, [])
 
-  // 커스텀 스티커 목록 가져오기
   const custom = (auth.config?.customReactions || []).map((r) => ({
     key: `custom:${r.id}`, label: r.name, type: 'image', value: r.image,
   }))
@@ -76,7 +75,22 @@ export default function ReactionBar({ entry, onToggle }) {
 
   return (
     <div className="reaction-bar">
-      {/* 1. 현재 달려있는 반응(이모지+커스텀스티커)들 보여주기 */}
+      
+      {/* 이모지 크기를 18px로 대폭 줄이고 창을 얄쌍하게 다이어트하는 스타일 */}
+      <style>{`
+        .custom-emoji-picker .EmojiPickerReact {
+          --epr-emoji-size: 18px !important; 
+          --epr-category-label-text-size: 11px !important; 
+          --epr-search-input-height: 28px !important; 
+          --epr-search-input-text-size: 12px !important; 
+          --epr-header-padding: 8px 8px 4px 8px !important; 
+          --epr-category-navigation-button-size: 20px !important; 
+          border: none !important;
+          font-family: inherit !important;
+        }
+      `}</style>
+
+      {/* 1. 현재 달려있는 반응들 */}
       {Object.entries(entry.reactions || {}).map(([key, users]) => {
         if (!users || users.length === 0) return null
         const mine = users.includes(myId)
@@ -119,16 +133,16 @@ export default function ReactionBar({ entry, onToggle }) {
         </button>
 
         {open && (
-          <div className="reaction-picker" style={{ width: '310px', padding: '12px' }}>
+          <div className="reaction-picker custom-emoji-picker" style={{ width: '260px', padding: '8px' }}>
             {!pending ? (
               <>
-                {/* 2-1. 커스텀 스티커 영역 (기존 기능 완벽 유지) */}
-                <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--line)' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--ink-soft)', marginBottom: '8px' }}>
+                {/* 2-1. 커스텀 스티커 영역 */}
+                <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid var(--line)' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--ink-soft)', marginBottom: '6px' }}>
                     나만의 커스텀 스티커
                   </div>
                   {custom.length > 0 && (
-                    <div className="reaction-picker-grid" style={{ marginBottom: '8px' }}>
+                    <div className="reaction-picker-grid" style={{ marginBottom: '6px' }}>
                       {custom.map((r) => {
                         const reactionId = r.key.slice('custom:'.length)
                         return (
@@ -155,17 +169,17 @@ export default function ReactionBar({ entry, onToggle }) {
                       })}
                     </div>
                   )}
-                  <label className="reaction-upload-btn" style={{ display: 'block', width: '100%', boxSizing: 'border-box' }}>
+                  <label className="reaction-upload-btn" style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: '5px' }}>
                     + 이미지로 새 스티커 만들기
                     <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFilePicked} hidden />
                   </label>
                 </div>
 
-                {/* 2-2. 기본 이모지 키보드 영역 (새로 추가됨) */}
-                <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--ink-soft)', marginBottom: '8px' }}>
+                {/* 2-2. 기본 이모지 키보드 영역 */}
+                <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--ink-soft)', marginBottom: '4px' }}>
                   기본 이모지
                 </div>
-                <div style={{ width: '100%', overflow: 'hidden', borderRadius: '8px' }}>
+                <div style={{ width: '100%', overflow: 'hidden', borderRadius: '6px', border: '1px solid var(--line)' }}>
                   <EmojiPicker 
                     onEmojiClick={(e) => {
                       onToggle(e.emoji)
@@ -173,8 +187,10 @@ export default function ReactionBar({ entry, onToggle }) {
                     }}
                     autoFocusSearch={false}
                     width="100%"
-                    height={300}
+                    height={220} /* 높이도 아담하게 줄임 */
                     searchPlaceHolder="이모지 검색..."
+                    previewConfig={{ showPreview: false }} 
+                    skinTonesDisabled={true} 
                   />
                 </div>
               </>
