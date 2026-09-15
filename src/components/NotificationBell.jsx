@@ -2,8 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { loadIndex, getEntry } from '../lib/dataModel.js'
 
-// align prop 추가: 'left'면 오른쪽으로 펴지고, 'right'면 왼쪽으로 펴짐
-export default function NotificationBell({ onSelectDate, align = 'right' }) {
+export default function NotificationBell({ onSelectEntry, align = 'right' }) {
   const auth = useAuth()
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
@@ -48,6 +47,8 @@ export default function NotificationBell({ onSelectDate, align = 'right' }) {
                     id: c.id,
                     date: d,
                     author: c.author,
+                    postAuthorId: authorId, // 단독 뷰 이동을 위해 추가
+                    entryId: entry.id,      // 단독 뷰 이동을 위해 추가
                     text: c.text,
                     createdAt: c.createdAt,
                     type: isMyPost ? 'my_post' : 'participated_post',
@@ -98,9 +99,10 @@ export default function NotificationBell({ onSelectDate, align = 'right' }) {
     setOpen((prev) => !prev)
   }
 
-  function handleItemClick(date) {
+  function handleItemClick(n) {
     setOpen(false)
-    onSelectDate?.(date)
+    // 알림 클릭 시 해당 글의 단독 뷰로 이동하기 위한 정보 전달
+    onSelectEntry?.({ date: n.date, memberId: n.postAuthorId, entryId: n.entryId })
   }
 
   if (!myId) return null
@@ -112,33 +114,17 @@ export default function NotificationBell({ onSelectDate, align = 'right' }) {
         onClick={handleToggle}
         title="새 알림"
         style={{
-          background: 'none',
-          border: 'none',
-          fontSize: '1.25rem',
-          cursor: 'pointer',
-          position: 'relative',
-          padding: '0.3rem 0.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer',
+          position: 'relative', padding: '0.3rem 0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >
         🔔
         {unreadCount > 0 && (
           <span
             style={{
-              position: 'absolute',
-              top: '2px',
-              right: '2px',
-              background: '#ff4d4f',
-              color: '#fff',
-              fontSize: '0.65rem',
-              fontWeight: 700,
-              borderRadius: '10px',
-              padding: '0.1rem 0.35rem',
-              minWidth: '14px',
-              textAlign: 'center',
-              lineHeight: 1,
+              position: 'absolute', top: '2px', right: '2px', background: '#ff4d4f', color: '#fff',
+              fontSize: '0.65rem', fontWeight: 700, borderRadius: '10px', padding: '0.1rem 0.35rem',
+              minWidth: '14px', textAlign: 'center', lineHeight: 1,
             }}
           >
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -149,42 +135,20 @@ export default function NotificationBell({ onSelectDate, align = 'right' }) {
       {open && (
         <div
           style={{
-            position: 'absolute',
-            top: 'calc(100% + 8px)',
-            // 전달받은 align 값에 따라 펼쳐지는 방향 결정!
-            right: align === 'right' ? 0 : 'auto',
-            left: align === 'left' ? 0 : 'auto',
-            width: '290px',
-            maxHeight: '380px',
-            overflowY: 'auto',
-            background: '#ffffff',
-            borderRadius: '14px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.12)',
-            border: '1px solid rgba(0, 0, 0, 0.08)',
-            zIndex: 1000,
-            padding: '0.6rem 0',
+            position: 'absolute', top: 'calc(100% + 8px)',
+            right: align === 'right' ? 0 : 'auto', left: align === 'left' ? 0 : 'auto',
+            width: '290px', maxHeight: '380px', overflowY: 'auto', background: '#ffffff',
+            borderRadius: '14px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.12)', border: '1px solid rgba(0, 0, 0, 0.08)',
+            zIndex: 1000, padding: '0.6rem 0',
           }}
         >
-          <div
-            style={{
-              padding: '0.4rem 0.9rem',
-              fontSize: '0.85rem',
-              fontWeight: 700,
-              color: '#444',
-              borderBottom: '1px solid #f0f0f0',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
+          <div style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', fontWeight: 700, color: '#444', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>새 댓글 알림</span>
             <span style={{ fontSize: '0.75rem', color: '#999' }}>{notifications.length}건</span>
           </div>
 
           {notifications.length === 0 ? (
-            <div style={{ padding: '1.5rem', textAlign: 'center', color: '#999', fontSize: '0.85rem' }}>
-              새로운 알림이 없어요.
-            </div>
+            <div style={{ padding: '1.5rem', textAlign: 'center', color: '#999', fontSize: '0.85rem' }}>새로운 알림이 없어요.</div>
           ) : (
             notifications.slice(0, 20).map((n) => {
               const authorMember = auth.members.find((m) => m.id === n.author)
@@ -193,15 +157,10 @@ export default function NotificationBell({ onSelectDate, align = 'right' }) {
               return (
                 <div
                   key={n.id}
-                  onClick={() => handleItemClick(n.date)}
+                  onClick={() => handleItemClick(n)}
                   style={{
-                    padding: '0.6rem 0.9rem',
-                    borderBottom: '1px solid #fafafa',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.2rem',
-                    transition: 'background 0.15s',
+                    padding: '0.6rem 0.9rem', borderBottom: '1px solid #fafafa', cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', gap: '0.2rem', transition: 'background 0.15s',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.03)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
@@ -209,22 +168,13 @@ export default function NotificationBell({ onSelectDate, align = 'right' }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#888' }}>
                     <span style={{ fontWeight: 600, color: '#333' }}>
                       {authorName}님의 댓글
-                      <span style={{ fontWeight: 400, color: '#999', marginLeft: '4px', fontSize: '0.7rem' }}>
-                        ({n.targetPostDesc})
-                      </span>
+                      <span style={{ fontWeight: 400, color: '#999', marginLeft: '4px', fontSize: '0.7rem' }}>({n.targetPostDesc})</span>
                     </span>
                     <span>{n.date.slice(5)}</span>
                   </div>
-                  <div
-                    style={{
-                      fontSize: '0.85rem',
-                      color: '#444',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    "{n.text}"
+                  {/* 쌍따옴표 제거 완료 */}
+                  <div style={{ fontSize: '0.85rem', color: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {n.text}
                   </div>
                 </div>
               )

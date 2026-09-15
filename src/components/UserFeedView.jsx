@@ -240,6 +240,7 @@ export default function UserFeedView({ memberId }) {
               onTagClick={(t) => setSelectedTag(cleanTag(t))}
               onUpdated={reloadData}
               onDeleted={reloadData}
+              onOpenDetail={(entryInfo) => onChanged?.(entryInfo)}
             />
           ))}
         </div>

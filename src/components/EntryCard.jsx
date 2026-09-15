@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext.jsx'
 import {
   deleteEntry, getChecklistFields, imagePath, makeCommentId, saveEntry, toggleReaction, withNewComment, withoutComment, withUpdatedComment,
 } from '../lib/dataModel.js'
-import { resizeImageFile } from '../lib/image.js'
 import Avatar from './Avatar.jsx'
 import RemoteImage from './RemoteImage.jsx'
 import Lightbox from './Lightbox.jsx'
@@ -17,6 +16,15 @@ function cleanTag(t) {
   return String(t).replace(/^#+/, '').trim()
 }
 
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function EntryCard({
   entry: initialEntry,
   sha: initialSha,
@@ -25,6 +33,8 @@ export default function EntryCard({
   subIndex = 0,
   parentEntry = null,
   showDate = false,
+  isDetailView = false, // 단독 뷰 모드 여부
+  onOpenDetail = null,  // 페이지 이동 함수
   onTagClick = null,
   onUpdated,
   onDeleted,
@@ -35,7 +45,6 @@ export default function EntryCard({
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [lightboxPath, setLightboxPath] = useState(null)
-  const [detailOpen, setDetailOpen] = useState(false) // 단독 상세 뷰 모달 상태
 
   const author = auth.members.find((m) => m.id === memberId)
   const isMine = auth.currentMember?.id === memberId
@@ -75,10 +84,12 @@ export default function EntryCard({
   async function handleAddComment({ text, imageFile }) {
     let imgPath = null
     if (imageFile) {
-      // 댓글 이미지 업로드 시 안전하게 리사이즈/압축 수행 (maxWidth: 1000px)
-      const { base64, extension } = await resizeImageFile(imageFile, 1000, 0.8)
+      const dataUrl = await fileToBase64(imageFile)
+      const base64Data = dataUrl.split(',')[1]
+      const extension = imageFile.name ? imageFile.name.split('.').pop() : 'jpg'
+      
       imgPath = imagePath(date, auth.currentMember.id, `comment.${extension}`)
-      await auth.client.putBase64File(imgPath, base64, { message: `댓글 이미지 (${date})` })
+      await auth.client.putBase64File(imgPath, base64Data, { message: `댓글 이미지 (${date})` })
     }
     const comment = {
       id: makeCommentId(),
@@ -126,10 +137,7 @@ export default function EntryCard({
       if (parentEntry && parentEntry.subEntries && parentEntry.subEntries.length > 1) {
         const filtered = parentEntry.subEntries.filter((_, i) => i !== subIndex)
         const updatedParent = {
-          ...parentEntry,
-          ...filtered[0],
-          subEntries: filtered,
-          updatedAt: new Date().toISOString(),
+          ...parentEntry, ...filtered[0], subEntries: filtered, updatedAt: new Date().toISOString(),
         }
         await saveEntry(auth.client, date, memberId, updatedParent, sha)
       } else {
@@ -145,8 +153,14 @@ export default function EntryCard({
   const sleepHours = entry.checklist?.sleepHours
   const images = entry.images || (entry.image ? [entry.image] : [])
 
-  const renderCardContent = (isModal = false) => (
-    <article className="entry-card card" style={{ '--author-color': author?.color || 'var(--accent)', breakInside: 'avoid', width: isModal ? '100%' : 'auto', maxWidth: isModal ? '650px' : 'none', margin: isModal ? 'auto' : '0' }}>
+  const triggerDetailView = () => {
+    if (!isDetailView && onOpenDetail) {
+      onOpenDetail({ date, memberId, entryId: entry.id })
+    }
+  }
+
+  return (
+    <article className="entry-card card" style={{ '--author-color': author?.color || 'var(--accent)', breakInside: 'avoid' }}>
       <header className="entry-card-header">
         <div className="entry-card-who">
           <Avatar member={author} />
@@ -156,14 +170,11 @@ export default function EntryCard({
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-          {isMine && !editing && !isModal && (
+          {isMine && !editing && (
             <div className="entry-card-actions">
               <button className="btn btn-ghost btn-small" onClick={() => setEditing(true)}>수정</button>
               <button className="btn btn-ghost btn-small btn-danger" onClick={handleDelete} disabled={busy}>삭제</button>
             </div>
-          )}
-          {isModal && (
-            <button className="btn btn-ghost btn-small" onClick={() => setDetailOpen(false)}>닫기 ✕</button>
           )}
         </div>
       </header>
@@ -178,18 +189,10 @@ export default function EntryCard({
                 type="button"
                 className="entry-mood-tag"
                 onClick={() => onTagClick?.(clean)}
-                title={`#${clean} 모아보기`}
                 style={{
-                  cursor: onTagClick ? 'pointer' : 'default',
-                  background: 'rgba(125, 160, 250, 0.12)',
-                  color: 'var(--accent, #4a75e6)',
-                  border: '1px solid rgba(125, 160, 250, 0.25)',
-                  borderRadius: '16px',
-                  padding: '0.25rem 0.65rem',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  display: 'inline-flex',
-                  alignItems: 'center',
+                  cursor: onTagClick ? 'pointer' : 'default', background: 'rgba(125, 160, 250, 0.12)',
+                  color: 'var(--accent, #4a75e6)', border: '1px solid rgba(125, 160, 250, 0.25)',
+                  borderRadius: '16px', padding: '0.25rem 0.65rem', fontSize: '0.85rem', fontWeight: 600,
                 }}
               >
                 #{clean}
@@ -201,37 +204,23 @@ export default function EntryCard({
 
       {editing ? (
         <EntryEditor
-          date={date}
-          memberId={memberId}
-          initialEntry={entry}
-          initialSha={sha}
-          parentEntry={parentEntry}
-          subIndex={subIndex}
-          onSaved={() => {
-            setEditing(false)
-            onUpdated?.()
-          }}
-          onCancel={() => setEditing(false)}
+          date={date} memberId={memberId} initialEntry={entry} initialSha={sha} parentEntry={parentEntry}
+          subIndex={subIndex} onSaved={() => { setEditing(false); onUpdated?.(); }} onCancel={() => setEditing(false)}
         />
       ) : (
         <>
           <div className="checklist-row readonly">
             {getChecklistFields(author).map((f) => {
               const on = !!entry.checklist?.[f.key]
-              return (
-                <span key={f.key} className={`chip checklist-status ${on ? 'on' : 'off'}`}>
-                  {f.label}:{on ? 'O' : 'X'}
-                </span>
-              )
+              return <span key={f.key} className={`chip checklist-status ${on ? 'on' : 'off'}`}>{f.label}:{on ? 'O' : 'X'}</span>
             })}
             {sleepHours != null && <span className="chip checklist-status">{sleepHours}시간 수면</span>}
           </div>
 
-          {/* 본문 영역 클릭 시 단독 상세 뷰(모달) 오픈 */}
           <div
-            onClick={() => !isModal && setDetailOpen(true)}
-            style={{ cursor: isModal ? 'default' : 'pointer' }}
-            title={isModal ? '' : '클릭해서 자세히 보기'}
+            onClick={triggerDetailView}
+            style={{ cursor: !isDetailView ? 'pointer' : 'default' }}
+            title={!isDetailView ? '클릭해서 단독 페이지로 보기' : ''}
           >
             {entry.content ? (
               <p className="entry-content">{entry.content}</p>
@@ -245,11 +234,7 @@ export default function EntryCard({
                     type="button"
                     key={path}
                     className="entry-image-btn"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setLightboxPath(path)
-                    }}
-                    aria-label="사진 크게 보기"
+                    onClick={(e) => { e.stopPropagation(); setLightboxPath(path); }}
                   >
                     <RemoteImage path={path} className="entry-image" />
                   </button>
@@ -263,43 +248,17 @@ export default function EntryCard({
       <ReactionBar entry={entry} onToggle={handleToggleReaction} />
 
       <div className="comment-section">
-        <CommentList comments={entry.comments} onDelete={handleDeleteComment} onUpdate={handleUpdateComment} />
+        <CommentList 
+          comments={entry.comments} 
+          onDelete={handleDeleteComment} 
+          onUpdate={handleUpdateComment} 
+          onCommentClick={triggerDetailView} 
+        />
         <CommentForm onSubmit={handleAddComment} />
       </div>
 
       <Lightbox path={lightboxPath} onClose={() => setLightboxPath(null)} />
     </article>
-  )
-
-  return (
-    <>
-      {renderCardContent(false)}
-
-      {/* 본문 클릭 시 뜨는 단독 상세 뷰 오버레이 모달 */}
-      {detailOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignCenter: 'center',
-            justifyContent: 'center',
-            zIndex: 1100,
-            padding: '1.5rem',
-            overflowY: 'auto',
-          }}
-          onClick={() => setDetailOpen(false)}
-        >
-          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '650px', margin: 'auto' }}>
-            {renderCardContent(true)}
-          </div>
-        </div>
-      )}
-    </>
   )
 }
 

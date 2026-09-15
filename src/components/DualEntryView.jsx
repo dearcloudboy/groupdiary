@@ -339,6 +339,7 @@ export default function DualEntryView({ date, onChanged }) {
                   onTagClick={handleTagClick}
                   onUpdated={reloadAll}
                   onDeleted={reloadAll}
+                  onOpenDetail={(entryInfo) => onChanged?.(entryInfo)}
                 />
               ))}
             </div>
@@ -369,6 +370,7 @@ export default function DualEntryView({ date, onChanged }) {
                 onTagClick={handleTagClick}
                 onUpdated={reloadAll}
                 onDeleted={reloadAll}
+                onOpenDetail={(entryInfo) => onChanged?.(entryInfo)}
               />
             ))
           )}

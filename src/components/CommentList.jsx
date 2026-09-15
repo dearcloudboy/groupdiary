@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import Avatar from './Avatar.jsx'
 import RemoteImage from './RemoteImage.jsx'
 
-export default function CommentList({ comments = [], onDelete, onUpdate }) {
+export default function CommentList({ comments = [], onDelete, onUpdate, onCommentClick }) {
   const auth = useAuth()
   const [editingId, setEditingId] = useState(null)
   const [editText, setEditText] = useState('')
@@ -12,7 +12,6 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
   if (comments.length === 0) return null
 
   const totalCount = comments.length
-  // 기본은 최신 5개만, '모든 댓글 보기' 누르면 전체 표시
   const displayedComments = showAll ? comments : comments.slice(-5)
 
   function startEdit(c) {
@@ -34,22 +33,11 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
 
   return (
     <div className="comment-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '0.8rem' }}>
-      {/* 5개 초과 시 상단에 '모든 댓글 보기' 버튼 배치 */}
       {!showAll && totalCount > 5 && (
         <button
           type="button"
           onClick={() => setShowAll(true)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--accent, #2b56cc)',
-            fontSize: '0.83rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-            textAlign: 'left',
-            padding: '0.2rem 0',
-            marginBottom: '0.2rem',
-          }}
+          style={{ background: 'none', border: 'none', color: 'var(--accent, #2b56cc)', fontSize: '0.83rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', padding: '0.2rem 0', marginBottom: '0.2rem' }}
         >
           💬 모든 댓글 보기 ({totalCount}개)
         </button>
@@ -64,45 +52,10 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
           <div
             key={c.id}
             className="comment-item"
-            style={{
-              display: 'flex',
-              gap: '0.6rem',
-              alignItems: 'flex-start',
-              fontSize: '0.9rem',
-              background: 'rgba(0, 0, 0, 0.02)',
-              padding: '0.6rem 0.8rem',
-              borderRadius: '12px',
-            }}
+            style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', fontSize: '0.9rem', background: 'rgba(0, 0, 0, 0.02)', padding: '0.6rem 0.8rem', borderRadius: '12px' }}
           >
-            <div
-              className="comment-avatar-wrap"
-              style={{
-                width: '30px',
-                height: '30px',
-                minWidth: '30px',
-                minHeight: '30px',
-                borderRadius: '50%',
-                overflow: 'hidden',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <style>{`
-                .comment-avatar-wrap .avatar,
-                .comment-avatar-wrap .avatar img,
-                .comment-avatar-wrap img {
-                  width: 30px !important;
-                  height: 30px !important;
-                  min-width: 30px !important;
-                  min-height: 30px !important;
-                  font-size: 1rem !important;
-                  line-height: 30px !important;
-                  object-fit: cover !important;
-                  border-radius: 50% !important;
-                }
-              `}</style>
+            <div className="comment-avatar-wrap" style={{ width: '30px', height: '30px', minWidth: '30px', minHeight: '30px', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <style>{`.comment-avatar-wrap .avatar, .comment-avatar-wrap .avatar img, .comment-avatar-wrap img { width: 30px !important; height: 30px !important; min-width: 30px !important; min-height: 30px !important; font-size: 1rem !important; line-height: 30px !important; object-fit: cover !important; border-radius: 50% !important; }`}</style>
               <Avatar member={author} />
             </div>
 
@@ -113,24 +66,8 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
                   <span style={{ fontSize: '0.75rem', color: '#999' }}>{formatTime(c.createdAt)}</span>
                   {isMyComment && !isEditing && (
                     <div style={{ display: 'flex', gap: '0.3rem', marginLeft: '0.2rem' }}>
-                      <button
-                        type="button"
-                        onClick={() => startEdit(c)}
-                        title="댓글 수정"
-                        style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}
-                      >
-                        수정
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(c.id)}
-                        title="댓글 삭제"
-                        style={{ background: 'none', border: 'none', color: '#bbb', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}
-                        onMouseEnter={(e) => (e.target.style.color = '#ff4d4d')}
-                        onMouseLeave={(e) => (e.target.style.color = '#bbb')}
-                      >
-                        ✕
-                      </button>
+                      <button type="button" onClick={() => startEdit(c)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}>수정</button>
+                      <button type="button" onClick={() => onDelete(c.id)} style={{ background: 'none', border: 'none', color: '#bbb', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}>✕</button>
                     </div>
                   )}
                 </div>
@@ -138,19 +75,20 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
 
               {isEditing ? (
                 <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.4rem', flexDirection: 'column' }}>
-                  <textarea
-                    rows={2}
-                    value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
-                    style={{ width: '100%', padding: '0.4rem', borderRadius: '6px', border: '1px solid #ccc', fontSize: '0.9rem', fontFamily: 'inherit', boxSizing: 'border-box' }}
-                  />
+                  <textarea rows={2} value={editText} onChange={(e) => setEditText(e.target.value)} style={{ width: '100%', padding: '0.4rem', borderRadius: '6px', border: '1px solid #ccc', fontSize: '0.9rem', fontFamily: 'inherit', boxSizing: 'border-box' }} />
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.3rem' }}>
                     <button type="button" onClick={cancelEdit} className="btn btn-ghost btn-small" style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}>취소</button>
                     <button type="button" onClick={() => saveEdit(c.id)} className="btn btn-primary btn-small" style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', background: 'var(--accent, #7da0fa)', color: '#fff', border: 'none', borderRadius: '4px' }}>저장</button>
                   </div>
                 </div>
               ) : (
-                <p style={{ margin: '0.2rem 0 0', wordBreak: 'break-all', color: '#333' }}>{c.text}</p>
+                <p 
+                  style={{ margin: '0.2rem 0 0', wordBreak: 'break-all', color: '#333', cursor: onCommentClick ? 'pointer' : 'default' }}
+                  onClick={() => onCommentClick && onCommentClick()}
+                  title={onCommentClick ? '클릭해서 단독 페이지로 보기' : ''}
+                >
+                  {c.text}
+                </p>
               )}
 
               {c.image && !isEditing && (
@@ -169,9 +107,5 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
 function formatTime(isoStr) {
   if (!isoStr) return ''
   const d = new Date(isoStr)
-  const m = d.getMonth() + 1
-  const day = d.getDate()
-  const h = String(d.getHours()).padStart(2, '0')
-  const min = String(d.getMinutes()).padStart(2, '0')
-  return `${m}.${day} ${h}:${min}`
+  return `${d.getMonth() + 1}.${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
