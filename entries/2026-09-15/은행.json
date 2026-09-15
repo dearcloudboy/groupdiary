@@ -17,7 +17,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T02:58:30.234Z",
-  "updatedAt": "2026-09-15T03:29:11.035Z",
+  "updatedAt": "2026-09-15T03:29:13.634Z",
   "subEntries": [
     {
       "id": "67fdfbe9-42ad-4647-be54-84edc0b473df",
@@ -37,6 +37,9 @@
       },
       "reactions": {
         "🍀": [
+          "keum"
+        ],
+        "custom:bf1f8a30-6ea4-4ca7-b8e4-3ac6be69a77b": [
           "keum"
         ]
       },
