@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
   deleteEntry, getChecklistFields, imagePath, makeCommentId, saveEntry, toggleReaction
@@ -54,16 +54,7 @@ export default function EntryCard({
 
   const activeComments = (entry.comments || []).filter(c => !locallyDeletedComments.has(c.id))
 
-  // 💡 반응 추가 등으로 화면이 다시 그려질 때 스크롤 위치를 지켜주는 핵심 로직!
-  useEffect(() => {
-    const savedScrollY = sessionStorage.getItem('scroll_pos')
-    if (savedScrollY !== null) {
-      window.scrollTo(0, parseInt(savedScrollY, 10))
-      sessionStorage.removeItem('scroll_pos')
-    }
-  }, [entry])
-
-  async function persist(nextEntry) {
+  async function persist(nextEntry, shouldNotify = true) {
     let payload = null
     if (parentEntry && parentEntry.subEntries && parentEntry.subEntries.length > 0) {
       const list = [...parentEntry.subEntries]
@@ -76,26 +67,21 @@ export default function EntryCard({
     const { entry: saved, sha: nextSha } = await saveEntry(auth.client, date, memberId, payload, sha)
     setEntry(nextEntry)
     setSha(nextSha)
-    onUpdated?.()
+    if (shouldNotify) {
+      onUpdated?.()
+    }
   }
 
+  // 💡 리액션은 화면 깜빡임 없이 즉시 반영되도록 최적화 (onUpdated 알림 생략)
   async function handleToggleReaction(emoji) {
     if (busy) return
-    
-    // 반응 누르는 순간 현재 스크롤 위치를 임시 저장소에 킵!
-    sessionStorage.setItem('scroll_pos', window.scrollY)
-
-    setBusy(true)
     const prev = entry
     const optimistic = { ...toggleReaction(entry, emoji, auth.currentMember.id) }
     setEntry(optimistic)
     try {
-      await persist(optimistic)
+      await persist(optimistic, false) // 부모 feed 새로고침 유발하는 알림 차단
     } catch (e) {
       setEntry(prev)
-      sessionStorage.removeItem('scroll_pos') // 실패하면 저장소 비우기
-    } finally {
-      setBusy(false)
     }
   }
 
@@ -126,9 +112,8 @@ export default function EntryCard({
       createdAt: new Date().toISOString(),
     }
     
-    sessionStorage.setItem('scroll_pos', window.scrollY)
     const nextEntry = { ...entry, comments: [...(entry.comments || []), comment] }
-    await persist(nextEntry)
+    await persist(nextEntry, true)
     setBusy(false)
   }
 
@@ -138,9 +123,8 @@ export default function EntryCard({
     setBusy(true)
     try {
       locallyDeletedComments.add(commentId)
-      sessionStorage.setItem('scroll_pos', window.scrollY)
       const nextEntry = { ...entry, comments: (entry.comments || []).filter(c => c.id !== commentId) }
-      await persist(nextEntry)
+      await persist(nextEntry, true)
     } catch (e) {
       window.alert('댓글 삭제에 실패했어요.')
     } finally {
@@ -152,12 +136,11 @@ export default function EntryCard({
     if (busy) return
     setBusy(true)
     try {
-      sessionStorage.setItem('scroll_pos', window.scrollY)
       const nextEntry = {
         ...entry,
         comments: (entry.comments || []).map(c => c.id === commentId ? { ...c, text: newText } : c)
       }
-      await persist(nextEntry)
+      await persist(nextEntry, true)
     } catch (e) {
       window.alert('댓글 수정에 실패했어요.')
     } finally {
