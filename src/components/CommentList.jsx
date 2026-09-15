@@ -96,7 +96,13 @@ export default function CommentList({ comments = [], onDelete, onUpdate, onComme
                 </div>
               ) : (
                 <p 
-                  style={{ margin: '0.2rem 0 0', wordBreak: 'break-all', color: '#333', cursor: onCommentClick ? 'pointer' : 'default' }}
+                  style={{ 
+                    margin: '0.2rem 0 0', 
+                    wordBreak: 'break-all', 
+                    whiteSpace: 'pre-wrap', /* 화면에 줄바꿈을 유지하도록 하는 핵심 속성! */
+                    color: '#333', 
+                    cursor: onCommentClick ? 'pointer' : 'default' 
+                  }}
                   onClick={() => onCommentClick && onCommentClick()}
                   title={onCommentClick ? '클릭해서 단독 페이지로 보기' : ''}
                 >
