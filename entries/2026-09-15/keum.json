@@ -11,7 +11,7 @@
   ],
   "checklist": {
     "sleepHours": 3,
-    "medication": false,
+    "medication": true,
     "outing": false,
     "cleaning": false,
     "delivery": false
@@ -19,7 +19,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T09:36:24.152Z",
-  "updatedAt": "2026-09-15T09:36:29.640Z",
+  "updatedAt": "2026-09-15T09:37:16.544Z",
   "subEntries": [
     {
       "id": "355a81a0-3390-4f7e-a2ae-04c307cba65d",
@@ -34,7 +34,7 @@
       ],
       "checklist": {
         "sleepHours": 3,
-        "medication": false,
+        "medication": true,
         "outing": false,
         "cleaning": false,
         "delivery": false
@@ -42,7 +42,7 @@
       "reactions": {},
       "comments": [],
       "createdAt": "2026-09-15T09:36:24.152Z",
-      "updatedAt": "2026-09-15T09:36:29.639Z"
+      "updatedAt": "2026-09-15T09:37:16.544Z"
     }
   ]
 }
