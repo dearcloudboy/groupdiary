@@ -52,7 +52,7 @@
     }
   ],
   "createdAt": "2026-09-15T09:41:56.173Z",
-  "updatedAt": "2026-09-15T11:04:23.180Z",
+  "updatedAt": "2026-09-15T11:28:15.114Z",
   "subEntries": [
     {
       "id": "d1b96b89-cb04-4fe3-9855-d51bc1167a2d",
@@ -125,7 +125,15 @@
         "정병on": true
       },
       "reactions": {},
-      "comments": [],
+      "comments": [
+        {
+          "id": "9da300a3-dc45-4f42-bc44-f3024e690add",
+          "author": "은행",
+          "text": "저도 5화가 좋아요 진짜 정병구간이긴 하지만...",
+          "image": null,
+          "createdAt": "2026-09-15T11:28:15.114Z"
+        }
+      ],
       "createdAt": "2026-09-15T11:04:17.943Z",
       "updatedAt": "2026-09-15T11:04:23.179Z"
     }
