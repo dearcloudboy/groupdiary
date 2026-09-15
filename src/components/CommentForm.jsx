@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react'
+import { resizeStickerToDataUrl } from '../lib/image.js'
 
 export default function CommentForm({ onSubmit }) {
   const [text, setText] = useState('')
@@ -8,11 +9,32 @@ export default function CommentForm({ onSubmit }) {
   const [error, setError] = useState(null)
   const fileInputRef = useRef(null)
 
-  function handleFile(e) {
+  async function handleFile(e) {
     const f = e.target.files?.[0]
     if (!f) return
-    setFile(f)
-    setPreview(URL.createObjectURL(f))
+    try {
+      // 이미지 자동 리사이즈 / 압축 적용
+      const resizedDataUrl = await resizeStickerToDataUrl(f, 1200, 0.8)
+      const resBlob = dataURItoBlob(resizedDataUrl)
+      const resizedFile = new File([resBlob], f.name || 'comment-image.jpg', { type: 'image/jpeg' })
+      setFile(resizedFile)
+      setPreview(resizedDataUrl)
+    } catch (err) {
+      console.error('이미지 리사이즈 실패:', err)
+      setFile(f)
+      setPreview(URL.createObjectURL(f))
+    }
+  }
+
+  function dataURItoBlob(dataURI) {
+    const byteString = atob(dataURI.split(',')[1])
+    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+    const ab = new ArrayBuffer(byteString.length)
+    const ia = new Uint8Array(ab)
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i)
+    }
+    return new Blob([ab], { type: mimeString })
   }
 
   function clearFile() {

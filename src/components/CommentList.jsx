@@ -7,8 +7,13 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
   const auth = useAuth()
   const [editingId, setEditingId] = useState(null)
   const [editText, setEditText] = useState('')
+  const [showAll, setShowAll] = useState(false)
 
   if (comments.length === 0) return null
+
+  // 기본은 최신 댓글 5개만 노출, '모든 댓글 보기' 누르면 전체 노출
+  const totalCount = comments.length
+  const displayedComments = showAll ? comments : comments.slice(-5)
 
   function startEdit(c) {
     setEditingId(c.id)
@@ -29,7 +34,28 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
 
   return (
     <div className="comment-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '0.8rem' }}>
-      {comments.map((c) => {
+      {/* 댓글이 5개 초과이고 아직 펼치지 않았다면 상단에 '모든 댓글 보기' 버튼 노출 */}
+      {!showAll && totalCount > 5 && (
+        <button
+          type="button"
+          onClick={() => setShowAll(true)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--accent, #2b56cc)',
+            fontSize: '0.83rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            textAlign: 'left',
+            padding: '0.2rem 0',
+            marginBottom: '0.2rem',
+          }}
+        >
+          💬 모든 댓글 보기 ({totalCount}개)
+        </button>
+      )}
+
+      {displayedComments.map((c) => {
         const author = auth.members.find((m) => m.id === c.author)
         const isMyComment = auth.currentMember?.id === c.author
         const isEditing = editingId === c.id
@@ -48,7 +74,6 @@ export default function CommentList({ comments = [], onDelete, onUpdate }) {
               borderRadius: '12px',
             }}
           >
-            {/* 공식 Avatar 컴포넌트를 활용한 30px 고정 원형 프사 */}
             <div
               className="comment-avatar-wrap"
               style={{
