@@ -17,7 +17,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T02:58:30.234Z",
-  "updatedAt": "2026-09-15T02:58:33.745Z",
+  "updatedAt": "2026-09-15T03:29:11.035Z",
   "subEntries": [
     {
       "id": "67fdfbe9-42ad-4647-be54-84edc0b473df",
@@ -35,7 +35,11 @@
         "cleaning": false,
         "delivery": false
       },
-      "reactions": {},
+      "reactions": {
+        "🍀": [
+          "keum"
+        ]
+      },
       "comments": [],
       "createdAt": "2026-09-15T02:58:30.234Z",
       "updatedAt": "2026-09-15T02:58:33.745Z"
