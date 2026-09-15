@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-14T16:15:23.113Z",
-  "updatedAt": "2026-09-15T01:16:45.542Z",
+  "updatedAt": "2026-09-15T01:29:57.046Z",
   "subEntries": [
     {
       "id": "b922a36f-5ec7-480f-8519-15e0f328bd99",
@@ -31,6 +31,23 @@
       "comments": [],
       "createdAt": "2026-09-14T16:15:23.113Z",
       "updatedAt": "2026-09-15T01:16:45.542Z"
+    },
+    {
+      "id": "05227c8f-425e-443a-8412-cacdf1f64d71",
+      "date": "2026-09-15",
+      "author": "서리",
+      "moodTags": [],
+      "content": "새친구들빨리와상태",
+      "images": [],
+      "checklist": {
+        "sleepHours": null,
+        "연성": false,
+        "정신병": true
+      },
+      "reactions": {},
+      "comments": [],
+      "createdAt": "2026-09-15T01:29:55.189Z",
+      "updatedAt": "2026-09-15T01:29:57.046Z"
     }
   ]
 }
