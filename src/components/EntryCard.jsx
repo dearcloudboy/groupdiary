@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
-  deleteEntry, getChecklistFields, imagePath, makeCommentId, saveEntry, toggleReaction, withNewComment, withoutComment, withUpdatedComment,
+  deleteEntry, getChecklistFields, imagePath, makeCommentId, saveEntry, toggleReaction
 } from '../lib/dataModel.js'
 import Avatar from './Avatar.jsx'
 import RemoteImage from './RemoteImage.jsx'
@@ -11,12 +11,13 @@ import CommentList from './CommentList.jsx'
 import CommentForm from './CommentForm.jsx'
 import EntryEditor from './EntryEditor.jsx'
 
+const locallyDeletedComments = new Set()
+
 function cleanTag(t) {
   if (!t) return ''
   return String(t).replace(/^#+/, '').trim()
 }
 
-// 은솔님 요청대로 파일 용량 리사이징은 뺐습니다! 순수하게 Base64로만 텍스트화해서 넘깁니다.
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -51,6 +52,17 @@ export default function EntryCard({
   const isMine = auth.currentMember?.id === memberId
   const moodTags = entry.moodTags || []
 
+  const activeComments = (entry.comments || []).filter(c => !locallyDeletedComments.has(c.id))
+
+  // 💡 반응 추가 등으로 화면이 다시 그려질 때 스크롤 위치를 지켜주는 핵심 로직!
+  useEffect(() => {
+    const savedScrollY = sessionStorage.getItem('scroll_pos')
+    if (savedScrollY !== null) {
+      window.scrollTo(0, parseInt(savedScrollY, 10))
+      sessionStorage.removeItem('scroll_pos')
+    }
+  }, [entry])
+
   async function persist(nextEntry) {
     let payload = null
     if (parentEntry && parentEntry.subEntries && parentEntry.subEntries.length > 0) {
@@ -69,14 +81,19 @@ export default function EntryCard({
 
   async function handleToggleReaction(emoji) {
     if (busy) return
+    
+    // 반응 누르는 순간 현재 스크롤 위치를 임시 저장소에 킵!
+    sessionStorage.setItem('scroll_pos', window.scrollY)
+
     setBusy(true)
     const prev = entry
-    const optimistic = toggleReaction(entry, emoji, auth.currentMember.id)
+    const optimistic = { ...toggleReaction(entry, emoji, auth.currentMember.id) }
     setEntry(optimistic)
     try {
       await persist(optimistic)
     } catch (e) {
       setEntry(prev)
+      sessionStorage.removeItem('scroll_pos') // 실패하면 저장소 비우기
     } finally {
       setBusy(false)
     }
@@ -87,7 +104,6 @@ export default function EntryCard({
     if (imageFile) {
       try {
         setBusy(true)
-        // 원본 사진을 그대로 처리 (에러 원인 제거)
         const dataUrl = await fileToBase64(imageFile)
         const base64Data = dataUrl.split(',')[1]
         const extension = imageFile.name ? imageFile.name.split('.').pop() : 'jpg'
@@ -109,7 +125,9 @@ export default function EntryCard({
       image: imgPath,
       createdAt: new Date().toISOString(),
     }
-    const nextEntry = withNewComment(entry, comment)
+    
+    sessionStorage.setItem('scroll_pos', window.scrollY)
+    const nextEntry = { ...entry, comments: [...(entry.comments || []), comment] }
     await persist(nextEntry)
     setBusy(false)
   }
@@ -119,7 +137,9 @@ export default function EntryCard({
     if (!window.confirm('이 댓글을 삭제할까요?')) return
     setBusy(true)
     try {
-      const nextEntry = withoutComment(entry, commentId)
+      locallyDeletedComments.add(commentId)
+      sessionStorage.setItem('scroll_pos', window.scrollY)
+      const nextEntry = { ...entry, comments: (entry.comments || []).filter(c => c.id !== commentId) }
       await persist(nextEntry)
     } catch (e) {
       window.alert('댓글 삭제에 실패했어요.')
@@ -132,7 +152,11 @@ export default function EntryCard({
     if (busy) return
     setBusy(true)
     try {
-      const nextEntry = withUpdatedComment(entry, commentId, newText)
+      sessionStorage.setItem('scroll_pos', window.scrollY)
+      const nextEntry = {
+        ...entry,
+        comments: (entry.comments || []).map(c => c.id === commentId ? { ...c, text: newText } : c)
+      }
       await persist(nextEntry)
     } catch (e) {
       window.alert('댓글 수정에 실패했어요.')
@@ -261,7 +285,7 @@ export default function EntryCard({
 
       <div className="comment-section">
         <CommentList 
-          comments={entry.comments} 
+          comments={activeComments} 
           onDelete={handleDeleteComment} 
           onUpdate={handleUpdateComment} 
           onCommentClick={triggerDetailView} 
