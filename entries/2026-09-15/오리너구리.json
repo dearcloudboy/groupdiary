@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T01:37:21.961Z",
-  "updatedAt": "2026-09-15T02:49:04.043Z",
+  "updatedAt": "2026-09-15T03:29:48.892Z",
   "subEntries": [
     {
       "id": "844c58fe-b509-4c7c-9c76-c7d544875b60",
@@ -49,6 +49,13 @@
           "text": "안녕하세요 잘 부탁드려요",
           "image": null,
           "createdAt": "2026-09-15T02:04:35.925Z"
+        },
+        {
+          "id": "a65d87ea-70bf-42f7-8288-c5a45a1557a5",
+          "author": "keum",
+          "text": "👋👋👋👋",
+          "image": null,
+          "createdAt": "2026-09-15T03:29:48.892Z"
         }
       ],
       "createdAt": "2026-09-15T01:37:21.961Z",
