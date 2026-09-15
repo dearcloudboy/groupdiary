@@ -16,7 +16,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T09:41:56.173Z",
-  "updatedAt": "2026-09-15T10:56:50.244Z",
+  "updatedAt": "2026-09-15T11:01:11.781Z",
   "subEntries": [
     {
       "id": "d1b96b89-cb04-4fe3-9855-d51bc1167a2d",
@@ -62,6 +62,13 @@
           "text": "포타 500개...입벌리구 있을게요",
           "image": null,
           "createdAt": "2026-09-15T10:56:41.016Z"
+        },
+        {
+          "id": "4b280edd-c952-4b70-bd93-dfae6b3f5029",
+          "author": "keum",
+          "text": "아니진짜 이사람들이?",
+          "image": null,
+          "createdAt": "2026-09-15T11:01:11.781Z"
         }
       ],
       "createdAt": "2026-09-15T09:41:56.173Z",
