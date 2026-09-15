@@ -92,7 +92,7 @@
     }
   ],
   "createdAt": "2026-09-15T01:36:59.864Z",
-  "updatedAt": "2026-09-15T06:02:50.339Z",
+  "updatedAt": "2026-09-15T09:42:20.416Z",
   "subEntries": [
     {
       "id": "1a85806d-bdfc-44d5-9053-fdec1b81f5ad",
@@ -238,6 +238,13 @@
           "text": "이게무슨소리예요 저그러면죽습니다",
           "image": null,
           "createdAt": "2026-09-15T06:02:50.338Z"
+        },
+        {
+          "id": "afcad29e-ab9f-450f-b23a-b6f99ccd6642",
+          "author": "keum",
+          "text": "기대하겟습니다",
+          "image": null,
+          "createdAt": "2026-09-15T09:42:20.416Z"
         }
       ],
       "createdAt": "2026-09-15T04:40:45.255Z",
