@@ -6,8 +6,8 @@
   "images": [],
   "checklist": {
     "sleepHours": null,
-    "연성했나요": false,
-    "정신병있나요": true
+    "연성": false,
+    "정신병": true
   },
   "reactions": {
     "custom:3f11bcbd-ca31-4571-b521-a26afbfef29a": [
@@ -38,7 +38,7 @@
     }
   ],
   "createdAt": "2026-09-14T12:28:32.319Z",
-  "updatedAt": "2026-09-15T01:16:59.724Z",
+  "updatedAt": "2026-09-15T01:17:17.875Z",
   "subEntries": [
     {
       "date": "2026-09-14",
@@ -48,8 +48,8 @@
       "images": [],
       "checklist": {
         "sleepHours": null,
-        "연성했나요": false,
-        "정신병있나요": true
+        "연성": false,
+        "정신병": true
       },
       "reactions": {
         "custom:3f11bcbd-ca31-4571-b521-a26afbfef29a": [
@@ -80,7 +80,8 @@
         }
       ],
       "createdAt": "2026-09-14T12:28:32.319Z",
-      "updatedAt": "2026-09-14T13:22:03.284Z"
+      "updatedAt": "2026-09-15T01:17:17.875Z",
+      "id": "b261dad7-7c99-499c-a5cc-91ff6ee002bf"
     },
     {
       "id": "82dca69e-d870-4c99-99fd-3754843217c7",
@@ -105,5 +106,6 @@
       "createdAt": "2026-09-14T13:40:05.636Z",
       "updatedAt": "2026-09-15T01:16:59.724Z"
     }
-  ]
+  ],
+  "id": "b261dad7-7c99-499c-a5cc-91ff6ee002bf"
 }
