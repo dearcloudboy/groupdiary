@@ -17,7 +17,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T02:58:30.234Z",
-  "updatedAt": "2026-09-15T03:29:13.634Z",
+  "updatedAt": "2026-09-15T03:29:31.438Z",
   "subEntries": [
     {
       "id": "67fdfbe9-42ad-4647-be54-84edc0b473df",
@@ -43,7 +43,15 @@
           "keum"
         ]
       },
-      "comments": [],
+      "comments": [
+        {
+          "id": "b5cef3f4-eee4-44ec-a32d-252acbe5e563",
+          "author": "keum",
+          "text": "정신병예술드라마 어떡합니까 진짜",
+          "image": null,
+          "createdAt": "2026-09-15T03:29:31.438Z"
+        }
+      ],
       "createdAt": "2026-09-15T02:58:30.234Z",
       "updatedAt": "2026-09-15T02:58:33.745Z"
     }
