@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getEntry, loadIndex } from '../lib/dataModel.js'
+import { getEntry, loadIndex, todayStr } from '../lib/dataModel.js'
 import { DIARY_WORD } from '../config.js'
 import EntryCard from './EntryCard.jsx'
 import EntryEditor from './EntryEditor.jsx'
@@ -11,15 +11,30 @@ function cleanTag(t) {
   return String(t).replace(/^#+/, '').trim()
 }
 
-export default function DualEntryView({ date, onChanged }) {
+// 글 작성, 수정, 마지막 댓글 시간 중 가장 최근 시간을 타임스탬프로 계산 (끌어올림용)
+function getLatestActivityTimestamp(entry, fallbackDate) {
+  const times = [
+    new Date(entry.createdAt || fallbackDate).getTime(),
+    new Date(entry.updatedAt || fallbackDate).getTime(),
+  ]
+  if (entry.comments && entry.comments.length > 0) {
+    entry.comments.forEach((c) => {
+      if (c.createdAt) times.push(new Date(c.createdAt).getTime())
+    })
+  }
+  return Math.max(...times.filter((t) => !isNaN(t)))
+}
+
+export default function DualEntryView({ date, isDateFiltered = false, onClearDateFilter, onChanged }) {
   const auth = useAuth()
   const [slots, setSlots] = useState({})
   const [addingFor, setAddingFor] = useState(null)
+  const [sortBy, setSortBy] = useState('activity') // 'activity': 최신활동순(끌올), 'created': 작성시간순
   
   const [selectedTag, setSelectedTag] = useState(null)
   const [allEntriesMap, setAllEntriesMap] = useState({})
+  const [loading, setLoading] = useState(true)
 
-  // 현재 날짜 로드
   const loadData = useCallback(async () => {
     const newSlots = {}
     for (const m of auth.members) {
@@ -33,8 +48,8 @@ export default function DualEntryView({ date, onChanged }) {
     setSlots(newSlots)
   }, [auth.client, auth.members, date])
 
-  // 전체 날짜 히스토리 로드 (태그 모아보기용)
   const loadAllHistory = useCallback(async () => {
+    setLoading(true)
     try {
       const { json: index } = await loadIndex(auth.client)
       const allDates = Object.keys(index || {})
@@ -52,12 +67,12 @@ export default function DualEntryView({ date, onChanged }) {
       setAllEntriesMap(fullMap)
     } catch (err) {
       console.error(err)
+    } finally {
+      setLoading(false)
     }
   }, [auth.client, auth.members])
 
   useEffect(() => {
-    setSlots({})
-    setAddingFor(null)
     loadData()
   }, [date, auth.members.length, loadData])
 
@@ -65,7 +80,6 @@ export default function DualEntryView({ date, onChanged }) {
     loadAllHistory()
   }, [loadAllHistory])
 
-  // 수집된 모든 고유 태그 목록
   const availableTags = useMemo(() => {
     const set = new Set()
     Object.values(allEntriesMap).forEach((byMember) => {
@@ -85,13 +99,9 @@ export default function DualEntryView({ date, onChanged }) {
     return Array.from(set)
   }, [allEntriesMap])
 
-  // 선택된 태그 기준: 멤버 구분 없이 전체 시간순(최신순) 리스트 생성
-  const timelineTaggedEntries = useMemo(() => {
-    if (!selectedTag) return []
+  const flattenedAllEntries = useMemo(() => {
     const list = []
-
-    const sortedDates = Object.keys(allEntriesMap).sort((a, b) => (a < b ? 1 : -1))
-    sortedDates.forEach((d) => {
+    Object.keys(allEntriesMap).forEach((d) => {
       auth.members.forEach((m) => {
         const slot = allEntriesMap[d]?.[m.id]
         if (!slot?.json) return
@@ -100,29 +110,54 @@ export default function DualEntryView({ date, onChanged }) {
           ? slot.json.subEntries
           : [slot.json]
 
-        subList.forEach((sub, idx) => {
-          const tags = (sub.moodTags || []).map(cleanTag)
-          if (tags.includes(selectedTag)) {
-            list.push({
-              date: d,
-              memberId: m.id,
-              entry: sub,
-              subIndex: idx,
-              parentEntry: slot.json,
-              sha: slot.sha,
-              timestamp: new Date(sub.createdAt || sub.updatedAt || d).getTime(),
-            })
-          }
+        subList.forEach((sub) => {
+          const originalIdx = slot.json.subEntries
+            ? slot.json.subEntries.findIndex((e) => e.id === sub.id)
+            : 0
+
+          list.push({
+            date: d,
+            memberId: m.id,
+            entry: sub,
+            subIndex: originalIdx >= 0 ? originalIdx : 0,
+            parentEntry: slot.json,
+            sha: slot.sha,
+            createdTimestamp: new Date(sub.createdAt || d).getTime(),
+            activityTimestamp: getLatestActivityTimestamp(sub, d),
+          })
         })
       })
     })
+    return list
+  }, [allEntriesMap, auth.members])
 
-    return list.sort((a, b) => b.timestamp - a.timestamp)
-  }, [selectedTag, allEntriesMap, auth.members])
+  // 태그 필터링 시 표시할 목록
+  const displayedTaggedEntries = useMemo(() => {
+    if (!selectedTag) return []
+    const filtered = flattenedAllEntries.filter((item) => {
+      const tags = (item.entry.moodTags || []).map(cleanTag)
+      return tags.includes(selectedTag)
+    })
+    return filtered.sort((a, b) =>
+      sortBy === 'activity'
+        ? b.activityTimestamp - a.activityTimestamp
+        : b.createdTimestamp - a.createdTimestamp
+    )
+  }, [selectedTag, flattenedAllEntries, sortBy])
 
-  // 홈(날짜별 보기)에서 멤버 구분 없이 해당 날짜에 작성된 모든 개별 글들을 시간순(최신순)으로 평탄화
-  const todayTimelineItems = useMemo(() => {
-    const items = []
+  // 홈 전체 기본 피드
+  const homeFeedEntries = useMemo(() => {
+    const list = [...flattenedAllEntries]
+    return list.sort((a, b) =>
+      sortBy === 'activity'
+        ? b.activityTimestamp - a.activityTimestamp
+        : b.createdTimestamp - a.createdTimestamp
+    )
+  }, [flattenedAllEntries, sortBy])
+
+  // 특정 날짜를 선택했을 때의 해당 날짜 글 목록
+  const dateSpecificEntries = useMemo(() => {
+    const list = []
     auth.members.forEach((m) => {
       const slot = slots[m.id]
       if (!slot?.json) return
@@ -131,115 +166,137 @@ export default function DualEntryView({ date, onChanged }) {
         ? slot.json.subEntries
         : [slot.json]
 
-      subList.forEach((sub, idx) => {
+      subList.forEach((sub) => {
         const originalIdx = slot.json.subEntries
           ? slot.json.subEntries.findIndex((e) => e.id === sub.id)
           : 0
 
-        items.push({
+        list.push({
+          date: date,
           memberId: m.id,
           entry: sub,
           subIndex: originalIdx >= 0 ? originalIdx : 0,
           parentEntry: slot.json,
           sha: slot.sha,
-          timestamp: new Date(sub.createdAt || sub.updatedAt || date).getTime(),
+          createdTimestamp: new Date(sub.createdAt || date).getTime(),
+          activityTimestamp: getLatestActivityTimestamp(sub, date),
         })
       })
     })
 
-    // 최신 작성 시간순 정렬
-    return items.sort((a, b) => b.timestamp - a.timestamp)
-  }, [slots, auth.members, date])
+    return list.sort((a, b) =>
+      sortBy === 'activity'
+        ? b.activityTimestamp - a.activityTimestamp
+        : b.createdTimestamp - a.createdTimestamp
+    )
+  }, [slots, auth.members, date, sortBy])
 
   const handleTagClick = (rawTag) => {
     const target = cleanTag(rawTag)
     setSelectedTag((prev) => (prev === target ? null : target))
   }
 
+  const reloadAll = () => {
+    loadData()
+    loadAllHistory()
+    onChanged?.()
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
-      {/* 전체 태그 필터 바 */}
-      {availableTags.length > 0 && (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-            padding: '0.8rem 1.2rem',
-            background: 'rgba(255, 255, 255, 0.85)',
-            borderRadius: '16px',
-            alignItems: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-          }}
-        >
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#555', marginRight: '0.3rem' }}>
-            🏷️ 전체 태그:
-          </span>
-          <button
-            type="button"
-            onClick={() => setSelectedTag(null)}
-            style={{
-              padding: '0.35rem 0.85rem',
-              borderRadius: '20px',
-              border: selectedTag === null ? '1.5px solid var(--accent, #7da0fa)' : '1px solid rgba(0,0,0,0.12)',
-              background: selectedTag === null ? 'var(--accent, #7da0fa)' : '#fff',
-              color: selectedTag === null ? '#fff' : '#444',
-              fontSize: '0.85rem',
-              fontWeight: selectedTag === null ? 700 : 500,
-              cursor: 'pointer',
-            }}
-          >
-            날짜별 보기
-          </button>
-          {availableTags.map((tag) => {
-            const active = selectedTag === tag
-            return (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => handleTagClick(tag)}
-                style={{
-                  padding: '0.35rem 0.85rem',
-                  borderRadius: '20px',
-                  border: active ? '1.5px solid var(--accent, #7da0fa)' : '1px solid rgba(0,0,0,0.12)',
-                  background: active ? 'var(--accent, #7da0fa)' : '#fff',
-                  color: active ? '#fff' : '#444',
-                  fontSize: '0.85rem',
-                  fontWeight: active ? 700 : 500,
-                  cursor: 'pointer',
-                }}
-              >
-                #{tag}
-              </button>
-            )
-          })}
-        </div>
-      )}
+      {/* 상단 컨트롤 바: 태그 + 정렬 전환 버튼 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#666', marginRight: '0.2rem' }}>
+              🏷️ 태그:
+            </span>
+            {availableTags.map((tag) => {
+              const active = selectedTag === tag
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => handleTagClick(tag)}
+                  style={{
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '16px',
+                    border: active ? '1.5px solid var(--accent, #7da0fa)' : '1px solid rgba(0,0,0,0.12)',
+                    background: active ? 'var(--accent, #7da0fa)' : '#fff',
+                    color: active ? '#fff' : '#444',
+                    fontSize: '0.8rem',
+                    fontWeight: active ? 700 : 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  #{tag}
+                </button>
+              )
+            })}
+          </div>
 
-      {/* 1) 태그 모아보기 활성화 시 */}
+          <div style={{ display: 'flex', gap: '0.3rem', background: 'rgba(0,0,0,0.05)', padding: '0.25rem', borderRadius: '12px' }}>
+            <button
+              type="button"
+              onClick={() => setSortBy('activity')}
+              style={{
+                padding: '0.3rem 0.65rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: sortBy === 'activity' ? '#fff' : 'transparent',
+                fontWeight: sortBy === 'activity' ? 700 : 500,
+                color: sortBy === 'activity' ? 'var(--accent, #2b56cc)' : '#666',
+                boxShadow: sortBy === 'activity' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+              }}
+            >
+              🔥 최신 활동순
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortBy('created')}
+              style={{
+                padding: '0.3rem 0.65rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: sortBy === 'created' ? '#fff' : 'transparent',
+                fontWeight: sortBy === 'created' ? 700 : 500,
+                color: sortBy === 'created' ? 'var(--accent, #2b56cc)' : '#666',
+                boxShadow: sortBy === 'created' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+              }}
+            >
+              ⏱️ 최초 작성순
+            </button>
+          </div>
+        </div>
+      </div>
+
       {selectedTag ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', maxWidth: '680px', margin: '0 auto', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.2rem' }}>
-            <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--accent, #2b56cc)' }}>
-              #{selectedTag} 모아보기 ({timelineTaggedEntries.length}개)
+            <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--accent, #2b56cc)' }}>
+              #{selectedTag} 모아보기 ({displayedTaggedEntries.length}개)
             </span>
             <button
               type="button"
               className="btn btn-ghost btn-small"
               onClick={() => setSelectedTag(null)}
-              style={{ cursor: 'pointer', fontSize: '0.85rem' }}
+              style={{ cursor: 'pointer', fontSize: '0.8rem' }}
             >
               ✕ 필터 해제
             </button>
           </div>
 
-          {timelineTaggedEntries.length === 0 ? (
+          {displayedTaggedEntries.length === 0 ? (
             <div className="card empty-slot" style={{ padding: '2rem 1rem' }}>
               <p style={{ color: '#888', margin: 0 }}>이 태그가 달린 글이 없어요.</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-              {timelineTaggedEntries.map((item, idx) => (
+              {displayedTaggedEntries.map((item, idx) => (
                 <EntryCard
                   key={item.entry.id || `${item.date}-${item.memberId}-${idx}`}
                   entry={item.entry}
@@ -250,28 +307,32 @@ export default function DualEntryView({ date, onChanged }) {
                   memberId={item.memberId}
                   showDate={true}
                   onTagClick={handleTagClick}
-                  onUpdated={() => {
-                    loadData()
-                    loadAllHistory()
-                    onChanged?.()
-                  }}
-                  onDeleted={() => {
-                    loadData()
-                    loadAllHistory()
-                    onChanged?.()
-                  }}
+                  onUpdated={reloadAll}
+                  onDeleted={reloadAll}
                 />
               ))}
             </div>
           )}
         </div>
-      ) : (
-        /* 2) 홈(날짜별 보기): 작성 시간순 타임라인 피드 + 아직 안 쓴 멤버 슬롯 하단 배치 */
+      ) : isDateFiltered ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '680px', margin: '0 auto', width: '100%' }}>
-          {/* 이미 작성된 글들의 최신순 타임라인 */}
-          {todayTimelineItems.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.2rem' }}>
+            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#333' }}>
+              📅 {date} 일기 목록
+            </span>
+            <button
+              type="button"
+              className="btn btn-ghost btn-small"
+              onClick={onClearDateFilter}
+              style={{ cursor: 'pointer', fontSize: '0.8rem' }}
+            >
+              전체 최신 피드로 보기 ↩
+            </button>
+          </div>
+
+          {dateSpecificEntries.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
-              {todayTimelineItems.map((item, idx) => (
+              {dateSpecificEntries.map((item, idx) => (
                 <EntryCard
                   key={item.entry.id || `${item.memberId}-${idx}`}
                   entry={item.entry}
@@ -282,34 +343,21 @@ export default function DualEntryView({ date, onChanged }) {
                   memberId={item.memberId}
                   showDate={false}
                   onTagClick={handleTagClick}
-                  onUpdated={() => {
-                    loadData()
-                    loadAllHistory()
-                    onChanged?.()
-                  }}
-                  onDeleted={() => {
-                    loadData()
-                    loadAllHistory()
-                    onChanged?.()
-                  }}
+                  onUpdated={reloadAll}
+                  onDeleted={reloadAll}
                 />
               ))}
             </div>
           )}
 
-          {/* 아직 글을 쓰지 않았거나 편집/추가할 수 있는 멤버별 슬롯 (하단 배치) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
             {auth.members.map((m) => {
               const slot = slots[m.id]
               const isMine = auth.currentMember?.id === m.id
               const isAdding = addingFor === m.id
 
-              // 데이터 로딩 중인 경우
-              if (slot === undefined) {
-                return <div key={m.id} className="card skeleton-card" />
-              }
+              if (slot === undefined) return <div key={m.id} className="card skeleton-card" />
 
-              // 아직 아무 글도 안 쓴 멤버 슬롯
               if (slot === null && !isAdding) {
                 return (
                   <EmptySlot
@@ -318,17 +366,15 @@ export default function DualEntryView({ date, onChanged }) {
                     date={date}
                     onCreated={(newEntry, newSha) => {
                       setSlots((prev) => ({ ...prev, [m.id]: { json: newEntry, sha: newSha } }))
-                      loadAllHistory()
-                      onChanged?.()
+                      reloadAll()
                     }}
                   />
                 )
               }
 
-              // 이미 글을 썼지만 본인이 추가(새 서브엔트리) 버튼을 눌렀을 때
               if (isAdding) {
                 return (
-                  <div key={m.id} className="card" style={{ padding: '1.5rem', background: '#ffffff', borderRadius: '16px', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+                  <div key={m.id} className="card" style={{ padding: '1.5rem', background: '#fff', borderRadius: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
                       <Avatar member={m} />
                       <strong style={{ fontSize: '1rem' }}>{m.displayName}님의 새 {DIARY_WORD}</strong>
@@ -341,12 +387,8 @@ export default function DualEntryView({ date, onChanged }) {
                       parentEntry={slot?.json}
                       onSaved={(savedEntry, savedSha) => {
                         setAddingFor(null)
-                        setSlots((prev) => ({
-                          ...prev,
-                          [m.id]: { json: savedEntry, sha: savedSha },
-                        }))
-                        loadAllHistory()
-                        onChanged?.()
+                        setSlots((prev) => ({ ...prev, [m.id]: { json: savedEntry, sha: savedSha } }))
+                        reloadAll()
                       }}
                       onCancel={() => setAddingFor(null)}
                     />
@@ -354,7 +396,6 @@ export default function DualEntryView({ date, onChanged }) {
                 )
               }
 
-              // 본인 글이 이미 있고 추가 버튼을 띄워야 하는 경우
               if (isMine && !isAdding) {
                 return (
                   <button
@@ -362,22 +403,18 @@ export default function DualEntryView({ date, onChanged }) {
                     type="button"
                     style={{
                       width: '100%',
-                      padding: '0.9rem',
+                      padding: '0.85rem',
                       borderRadius: '14px',
                       border: '2px dashed var(--accent, #aaa)',
                       background: 'rgba(255, 255, 255, 0.8)',
                       color: 'var(--accent, #333)',
                       cursor: 'pointer',
                       fontWeight: 'bold',
-                      fontSize: '0.95rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.4rem',
+                      fontSize: '0.9rem',
                     }}
                     onClick={() => setAddingFor(m.id)}
                   >
-                    <span>+</span> {m.displayName}님 새 {DIARY_WORD} 추가하기
+                    + {m.displayName}님 새 {DIARY_WORD} 추가하기
                   </button>
                 )
               }
@@ -385,6 +422,35 @@ export default function DualEntryView({ date, onChanged }) {
               return null
             })}
           </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', maxWidth: '680px', margin: '0 auto', width: '100%' }}>
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="card skeleton-card" />
+              <div className="card skeleton-card" />
+            </div>
+          ) : homeFeedEntries.length === 0 ? (
+            <div className="card empty-slot" style={{ padding: '2.5rem 1rem' }}>
+              <p style={{ color: '#888', margin: 0 }}>아직 등록된 {DIARY_WORD}가 없어요.</p>
+            </div>
+          ) : (
+            homeFeedEntries.map((item, idx) => (
+              <EntryCard
+                key={item.entry.id || `${item.date}-${item.memberId}-${idx}`}
+                entry={item.entry}
+                subIndex={item.subIndex}
+                parentEntry={item.parentEntry}
+                sha={item.sha}
+                date={item.date}
+                memberId={item.memberId}
+                showDate={true}
+                onTagClick={handleTagClick}
+                onUpdated={reloadAll}
+                onDeleted={reloadAll}
+              />
+            ))
+          )}
         </div>
       )}
     </div>

@@ -10,6 +10,19 @@ function cleanTag(t) {
   return String(t).replace(/^#+/, '').trim()
 }
 
+function getLatestActivityTimestamp(entry, fallbackDate) {
+  const times = [
+    new Date(entry.createdAt || fallbackDate).getTime(),
+    new Date(entry.updatedAt || fallbackDate).getTime(),
+  ]
+  if (entry.comments && entry.comments.length > 0) {
+    entry.comments.forEach((c) => {
+      if (c.createdAt) times.push(new Date(c.createdAt).getTime())
+    })
+  }
+  return Math.max(...times.filter((t) => !isNaN(t)))
+}
+
 export default function UserFeedView({ memberId }) {
   const auth = useAuth()
   const member = auth.members.find((m) => m.id === memberId)
@@ -17,6 +30,7 @@ export default function UserFeedView({ memberId }) {
   const [entriesByDate, setEntriesByDate] = useState({})
   const [loading, setLoading] = useState(true)
   const [selectedTag, setSelectedTag] = useState(null)
+  const [sortBy, setSortBy] = useState('activity')
 
   const reloadData = () => {
     let cancelled = false
@@ -40,7 +54,6 @@ export default function UserFeedView({ memberId }) {
     return reloadData()
   }, [memberId, auth.client])
 
-  // 전체 작성 글에서 등장하는 모든 고유 태그 목록 추출
   const allTags = useMemo(() => {
     const set = new Set()
     Object.values(entriesByDate).forEach((slot) => {
@@ -59,8 +72,7 @@ export default function UserFeedView({ memberId }) {
     return Array.from(set)
   }, [entriesByDate])
 
-  // 전체 글 평탄화 및 작성 시간순(최신순) 정렬
-  const allFlattenedEntries = useMemo(() => {
+  const displayedEntries = useMemo(() => {
     const result = []
     dates.forEach((d) => {
       const slot = entriesByDate[d]
@@ -83,107 +95,66 @@ export default function UserFeedView({ memberId }) {
             subIndex: originalIdx >= 0 ? originalIdx : 0,
             parentEntry: slot.json,
             sha: slot.sha,
-            timestamp: new Date(sub.createdAt || sub.updatedAt || d).getTime(),
+            createdTimestamp: new Date(sub.createdAt || d).getTime(),
+            activityTimestamp: getLatestActivityTimestamp(sub, d),
           })
         }
       })
     })
 
-    // 최신 작성 시간순 정렬 (내림차순)
-    return result.sort((a, b) => b.timestamp - a.timestamp)
-  }, [dates, entriesByDate, selectedTag])
+    return result.sort((a, b) =>
+      sortBy === 'activity'
+        ? b.activityTimestamp - a.activityTimestamp
+        : b.createdTimestamp - a.createdTimestamp
+    )
+  }, [dates, entriesByDate, selectedTag, sortBy])
 
   if (!member) return null
 
   return (
-    <div className="user-feed-view" style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
+    <div className="user-feed-view" style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.3rem', width: '100%' }}>
       <header
-        className="user-feed-header"
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: '1.2rem',
           padding: '1.2rem 1.4rem',
-          background: 'rgba(255, 255, 255, 0.7)',
+          background: 'rgba(255, 255, 255, 0.75)',
           borderRadius: '20px',
-          backdropFilter: 'blur(8px)',
           boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
         }}
       >
-        <div
-          className="user-feed-avatar-wrap"
-          style={{
-            width: '80px',
-            height: '80px',
-            minWidth: '80px',
-            minHeight: '80px',
-            borderRadius: '50%',
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          }}
-        >
-          <style>{`
-            .user-feed-avatar-wrap .avatar,
-            .user-feed-avatar-wrap .avatar img,
-            .user-feed-avatar-wrap img {
-              width: 80px !important;
-              height: 80px !important;
-              min-width: 80px !important;
-              min-height: 80px !important;
-              font-size: 2rem !important;
-              line-height: 80px !important;
-              object-fit: cover !important;
-              border-radius: 50% !important;
-            }
-          `}</style>
+        <div style={{ width: '70px', height: '70px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
           <Avatar member={member} />
         </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-          <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700, color: '#222' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 700 }}>
             {member.displayName}님의 {DIARY_WORD}
           </h2>
-          <span style={{ color: 'var(--muted, #777)', fontSize: '0.9rem' }}>
+          <span style={{ color: '#777', fontSize: '0.85rem' }}>
             기록한 날: <strong>{dates.length}</strong>일
           </span>
         </div>
       </header>
 
-      {/* 전체 태그 필터 바 */}
-      {allTags.length > 0 && (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-            padding: '0.8rem 1.0rem',
-            background: 'rgba(255, 255, 255, 0.85)',
-            borderRadius: '16px',
-            alignItems: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-          }}
-        >
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#666', marginRight: '0.2rem' }}>
-            🏷️ 태그 모아보기:
-          </span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#666' }}>🏷️ 태그:</span>
           <button
             type="button"
             onClick={() => setSelectedTag(null)}
             style={{
-              padding: '0.3rem 0.8rem',
-              borderRadius: '20px',
+              padding: '0.25rem 0.65rem',
+              borderRadius: '16px',
               border: selectedTag === null ? '1.5px solid var(--accent, #7da0fa)' : '1px solid rgba(0,0,0,0.12)',
               background: selectedTag === null ? 'var(--accent, #7da0fa)' : '#fff',
               color: selectedTag === null ? '#fff' : '#444',
-              fontSize: '0.85rem',
+              fontSize: '0.8rem',
               fontWeight: selectedTag === null ? 700 : 500,
               cursor: 'pointer',
             }}
           >
-            전체 보기
+            전체
           </button>
           {allTags.map((tag) => {
             const active = selectedTag === tag
@@ -193,12 +164,12 @@ export default function UserFeedView({ memberId }) {
                 type="button"
                 onClick={() => setSelectedTag(active ? null : tag)}
                 style={{
-                  padding: '0.3rem 0.8rem',
-                  borderRadius: '20px',
+                  padding: '0.25rem 0.65rem',
+                  borderRadius: '16px',
                   border: active ? '1.5px solid var(--accent, #7da0fa)' : '1px solid rgba(0,0,0,0.12)',
                   background: active ? 'var(--accent, #7da0fa)' : '#fff',
                   color: active ? '#fff' : '#444',
-                  fontSize: '0.85rem',
+                  fontSize: '0.8rem',
                   fontWeight: active ? 700 : 500,
                   cursor: 'pointer',
                 }}
@@ -208,20 +179,55 @@ export default function UserFeedView({ memberId }) {
             )
           })}
         </div>
-      )}
+
+        <div style={{ display: 'flex', gap: '0.3rem', background: 'rgba(0,0,0,0.05)', padding: '0.25rem', borderRadius: '12px' }}>
+          <button
+            type="button"
+            onClick={() => setSortBy('activity')}
+            style={{
+              padding: '0.3rem 0.6rem',
+              borderRadius: '8px',
+              border: 'none',
+              background: sortBy === 'activity' ? '#fff' : 'transparent',
+              fontWeight: sortBy === 'activity' ? 700 : 500,
+              color: sortBy === 'activity' ? 'var(--accent, #2b56cc)' : '#666',
+              fontSize: '0.78rem',
+              cursor: 'pointer',
+            }}
+          >
+            🔥 최신 활동순
+          </button>
+          <button
+            type="button"
+            onClick={() => setSortBy('created')}
+            style={{
+              padding: '0.3rem 0.6rem',
+              borderRadius: '8px',
+              border: 'none',
+              background: sortBy === 'created' ? '#fff' : 'transparent',
+              fontWeight: sortBy === 'created' ? 700 : 500,
+              color: sortBy === 'created' ? 'var(--accent, #2b56cc)' : '#666',
+              fontSize: '0.78rem',
+              cursor: 'pointer',
+            }}
+          >
+            ⏱️ 최초 작성순
+          </button>
+        </div>
+      </div>
 
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="card skeleton-card" />
           <div className="card skeleton-card" />
         </div>
-      ) : allFlattenedEntries.length === 0 ? (
+      ) : displayedEntries.length === 0 ? (
         <div className="card empty-slot">
-          <p>{selectedTag ? `${selectedTag} 태그가 달린 글이 없어요.` : `아직 작성한 ${DIARY_WORD}가 없어요.`}</p>
+          <p>{selectedTag ? `#${selectedTag} 태그가 달린 글이 없어요.` : `작성된 ${DIARY_WORD}가 없어요.`}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          {allFlattenedEntries.map((item, idx) => (
+          {displayedEntries.map((item, idx) => (
             <EntryCard
               key={item.entry.id || `${item.date}-${idx}`}
               entry={item.entry}
@@ -231,10 +237,7 @@ export default function UserFeedView({ memberId }) {
               date={item.date}
               memberId={memberId}
               showDate={true}
-              onTagClick={(t) => {
-                const clean = cleanTag(t)
-                setSelectedTag(clean)
-              }}
+              onTagClick={(t) => setSelectedTag(cleanTag(t))}
               onUpdated={reloadData}
               onDeleted={reloadData}
             />
