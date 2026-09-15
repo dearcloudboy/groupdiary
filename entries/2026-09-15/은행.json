@@ -43,7 +43,7 @@
     }
   ],
   "createdAt": "2026-09-15T02:58:30.234Z",
-  "updatedAt": "2026-09-15T11:31:53.500Z",
+  "updatedAt": "2026-09-15T13:11:18.597Z",
   "subEntries": [
     {
       "id": "67fdfbe9-42ad-4647-be54-84edc0b473df",
@@ -105,7 +105,15 @@
         "sleepHours": null
       },
       "reactions": {},
-      "comments": [],
+      "comments": [
+        {
+          "id": "d9af60b8-2e16-4c3f-b217-3e23676adcdd",
+          "author": "오리너구리",
+          "text": "괜히 책잡힐 일 만들기보단 그냥 편하게 써방 하시는 걸 추천드려요! 고전 소설 같은 경우는 코어 팬층이 탄탄한 편이라...",
+          "image": null,
+          "createdAt": "2026-09-15T13:11:18.596Z"
+        }
+      ],
       "createdAt": "2026-09-15T11:31:16.514Z",
       "updatedAt": "2026-09-15T11:31:53.500Z"
     }
