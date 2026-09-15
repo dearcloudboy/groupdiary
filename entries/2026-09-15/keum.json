@@ -16,7 +16,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-15T09:41:56.173Z",
-  "updatedAt": "2026-09-15T10:03:53.269Z",
+  "updatedAt": "2026-09-15T10:14:03.259Z",
   "subEntries": [
     {
       "id": "d1b96b89-cb04-4fe3-9855-d51bc1167a2d",
@@ -34,7 +34,15 @@
         "정병on": true
       },
       "reactions": {},
-      "comments": [],
+      "comments": [
+        {
+          "id": "00ff1b7e-dd4a-4e1c-a4b3-d2b4722efbaa",
+          "author": "서리",
+          "text": "저도 노래가사에 많은 감응을 합니다 반가운 공통점이군요 포타는 언제쯤 올라올 수 있을까요?ㅋㅋㅋㅋ",
+          "image": null,
+          "createdAt": "2026-09-15T10:14:03.257Z"
+        }
+      ],
       "createdAt": "2026-09-15T09:41:56.173Z",
       "updatedAt": "2026-09-15T10:03:53.268Z"
     }
