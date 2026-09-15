@@ -11,7 +11,6 @@ function cleanTag(t) {
   return String(t).replace(/^#+/, '').trim()
 }
 
-// 글 작성, 수정, 마지막 댓글 시간 중 가장 최근 시간을 계산 (끌어올림용)
 function getLatestActivityTimestamp(entry, fallbackDate) {
   const times = [
     new Date(entry.createdAt || fallbackDate).getTime(),
@@ -29,7 +28,7 @@ export default function DualEntryView({ date, onChanged }) {
   const auth = useAuth()
   const [slots, setSlots] = useState({})
   const [addingFor, setAddingFor] = useState(null)
-  const [sortBy, setSortBy] = useState('activity') // 'activity': 최신활동순, 'created': 작성순
+  const [sortBy, setSortBy] = useState('activity') 
   
   const [selectedTag, setSelectedTag] = useState(null)
   const [allEntriesMap, setAllEntriesMap] = useState({})
@@ -167,37 +166,73 @@ export default function DualEntryView({ date, onChanged }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%', maxWidth: '680px', margin: '0 auto' }}>
       
-      {/* 1. 상단 컨트롤 바: 태그 & 정렬 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#666', marginRight: '0.2rem' }}>
-              🏷️ 태그:
-            </span>
-            {availableTags.map((tag) => {
-              const active = selectedTag === tag
-              return (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => handleTagClick(tag)}
-                  style={{
-                    padding: '0.25rem 0.65rem',
-                    borderRadius: '16px',
-                    border: active ? '1.5px solid var(--accent, #7da0fa)' : '1px solid rgba(0,0,0,0.12)',
-                    background: active ? 'var(--accent, #7da0fa)' : '#fff',
-                    color: active ? '#fff' : '#444',
-                    fontSize: '0.8rem',
-                    fontWeight: active ? 700 : 500,
-                    cursor: 'pointer',
-                  }}
-                >
-                  #{tag}
-                </button>
-              )
-            })}
-          </div>
+      {/* 1. 최상단: 새 글 쓰기 영역 (항상 렌더링) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+        {auth.members.map((m) => {
+          const isMine = auth.currentMember?.id === m.id
+          if (!isMine) return null
 
+          const slot = slots[m.id]
+          const isAdding = addingFor === m.id
+
+          if (slot === undefined) return <div key={m.id} className="card skeleton-card" style={{ padding: '1.5rem' }} />
+
+          if (!isAdding) {
+            return (
+              <button
+                key={m.id}
+                type="button"
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  borderRadius: '16px',
+                  border: '2px dashed var(--accent, #7da0fa)',
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  color: 'var(--accent, #2b56cc)',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '0.95rem',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  transition: 'all 0.2s ease'
+                }}
+                onClick={() => setAddingFor(m.id)}
+                onMouseEnter={(e) => (e.target.style.background = '#fff')}
+                onMouseLeave={(e) => (e.target.style.background = 'rgba(255, 255, 255, 0.8)')}
+              >
+                ✍️ 새로운 {DIARY_WORD} 남기기
+              </button>
+            )
+          }
+
+          return (
+            <div key={m.id} className="card" style={{ padding: '1.5rem', background: '#fff', borderRadius: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
+                <Avatar member={m} />
+                <strong style={{ fontSize: '1rem' }}>{m.displayName}님의 새 {DIARY_WORD}</strong>
+              </div>
+              <EntryEditor
+                date={date}
+                memberId={m.id}
+                initialEntry={null}
+                initialSha={slot?.sha}
+                parentEntry={slot?.json}
+                onSaved={(savedEntry, savedSha) => {
+                  setAddingFor(null)
+                  setSlots((prev) => ({ ...prev, [m.id]: { json: savedEntry, sha: savedSha } }))
+                  reloadAll()
+                }}
+                onCancel={() => setAddingFor(null)}
+              />
+            </div>
+          )
+        })}
+      </div>
+
+      {/* 2. 컨트롤 영역: 정렬 (위) -> 태그 (아래) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', background: 'rgba(255, 255, 255, 0.4)', padding: '1rem', borderRadius: '16px' }}>
+        
+        {/* 정렬 토글 */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <div style={{ display: 'flex', gap: '0.3rem', background: 'rgba(0,0,0,0.05)', padding: '0.25rem', borderRadius: '12px' }}>
             <button
               type="button"
@@ -235,73 +270,38 @@ export default function DualEntryView({ date, onChanged }) {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* 2. 상단 글쓰기 버튼 / 에디터 영역 */}
-      {!selectedTag && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', marginBottom: '1rem' }}>
-          {auth.members.map((m) => {
-            const isMine = auth.currentMember?.id === m.id
-            if (!isMine) return null
-
-            const slot = slots[m.id]
-            const isAdding = addingFor === m.id
-
-            if (slot === undefined) return <div key={m.id} className="card skeleton-card" style={{ padding: '1.5rem' }} />
-
-            // 클릭 전: 깔끔한 버튼만 노출
-            if (!isAdding) {
+        {/* 태그 리스트 */}
+        {availableTags.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#666', marginRight: '0.2rem' }}>
+              🏷️ 태그:
+            </span>
+            {availableTags.map((tag) => {
+              const active = selectedTag === tag
               return (
                 <button
-                  key={m.id}
+                  key={tag}
                   type="button"
+                  onClick={() => handleTagClick(tag)}
                   style={{
-                    width: '100%',
-                    padding: '1rem',
+                    padding: '0.25rem 0.65rem',
                     borderRadius: '16px',
-                    border: '2px dashed var(--accent, #7da0fa)',
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    color: 'var(--accent, #2b56cc)',
+                    border: active ? '1.5px solid var(--accent, #7da0fa)' : '1px solid rgba(0,0,0,0.12)',
+                    background: active ? 'var(--accent, #7da0fa)' : '#fff',
+                    color: active ? '#fff' : '#444',
+                    fontSize: '0.8rem',
+                    fontWeight: active ? 700 : 500,
                     cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '0.95rem',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                    transition: 'all 0.2s ease'
                   }}
-                  onClick={() => setAddingFor(m.id)}
-                  onMouseEnter={(e) => (e.target.style.background = '#fff')}
-                  onMouseLeave={(e) => (e.target.style.background = 'rgba(255, 255, 255, 0.8)')}
                 >
-                  + {DIARY_WORD}
+                  #{tag}
                 </button>
               )
-            }
-
-            // 클릭 후: 에디터 쫙 펼쳐짐
-            return (
-              <div key={m.id} className="card" style={{ padding: '1.5rem', background: '#fff', borderRadius: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
-                  <Avatar member={m} />
-                  <strong style={{ fontSize: '1rem' }}>{m.displayName}님의 새 {DIARY_WORD}</strong>
-                </div>
-                <EntryEditor
-                  date={date}
-                  memberId={m.id}
-                  initialEntry={null}
-                  initialSha={slot?.sha}
-                  parentEntry={slot?.json}
-                  onSaved={(savedEntry, savedSha) => {
-                    setAddingFor(null)
-                    setSlots((prev) => ({ ...prev, [m.id]: { json: savedEntry, sha: savedSha } }))
-                    reloadAll()
-                  }}
-                  onCancel={() => setAddingFor(null)} // 취소 누르면 다시 버튼으로 돌아감
-                />
-              </div>
-            )
-          })}
-        </div>
-      )}
+            })}
+          </div>
+        )}
+      </div>
 
       {/* 3. 하단 메인 피드 영역 */}
       {selectedTag ? (
