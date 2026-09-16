@@ -10,10 +10,25 @@
     "끄적이기": false,
     "정병on": true
   },
-  "reactions": {},
-  "comments": [],
+  "reactions": {
+    "❤️": [
+      "은행"
+    ],
+    "😋": [
+      "오리너구리"
+    ]
+  },
+  "comments": [
+    {
+      "id": "9c84ceb1-2743-4978-9520-93f8b1f836ef",
+      "author": "member-1789435783591",
+      "text": "너무너무 기대가되, 못가지면죽음뿐입니다",
+      "image": null,
+      "createdAt": "2026-09-16T07:31:34.154Z"
+    }
+  ],
   "createdAt": "2026-09-16T06:16:48.897Z",
-  "updatedAt": "2026-09-16T07:33:44.435Z",
+  "updatedAt": "2026-09-16T10:20:32.944Z",
   "subEntries": [
     {
       "id": "ef4c1fed-74b0-44d8-9485-0bd7e56e222c",
@@ -78,6 +93,25 @@
           "updatedAt": "2026-09-16T06:16:51.051Z"
         }
       ]
+    },
+    {
+      "id": "24d7cbb6-9beb-495e-bdea-9f8dd4ca901b",
+      "date": "2026-09-16",
+      "author": "keum",
+      "moodTags": [],
+      "content": "물음표님포타를보았고\n\n울었고\n\n뵤정 정말 좋습니다….\n\n제 최애 부분은 여기임 정말 좋아요 다시 읽어야지…",
+      "images": [
+        "images/2026-09-16/keum-1789554030996-entry.jpg"
+      ],
+      "checklist": {
+        "sleepHours": null,
+        "끄적이기": false,
+        "정병on": true
+      },
+      "reactions": {},
+      "comments": [],
+      "createdAt": "2026-09-16T10:20:26.960Z",
+      "updatedAt": "2026-09-16T10:20:32.943Z"
     }
   ]
 }
