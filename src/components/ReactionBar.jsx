@@ -8,7 +8,6 @@ export default function ReactionBar({ entry, onToggle }) {
   const auth = useAuth()
   const myId = auth.currentMember?.id
   const [open, setOpen] = useState(false)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [pending, setPending] = useState(null) // { file, preview, name }
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState(null)
@@ -20,7 +19,6 @@ export default function ReactionBar({ entry, onToggle }) {
     function handleOutside(e) {
       if (wrapRef.current && !wrapRef.current.contains(e.target)) {
         setOpen(false)
-        setShowEmojiPicker(false)
         setPending(null)
         setUploadError(null)
       }
@@ -111,7 +109,6 @@ export default function ReactionBar({ entry, onToggle }) {
           className="reaction-add-btn"
           onClick={() => {
             setOpen((v) => !v)
-            setShowEmojiPicker(false)
             setPending(null)
           }}
         >
@@ -119,18 +116,11 @@ export default function ReactionBar({ entry, onToggle }) {
         </button>
         {open && (
           <div className="reaction-picker">
-            {!showEmojiPicker && !pending ? (
+            {!pending ? (
               <>
-                <button
-                  type="button"
-                  className="reaction-picker-emoji-trigger"
-                  onClick={() => setShowEmojiPicker(true)}
-                >
-                  😀 이모지 피커로 추가하기
-                </button>
-
+                <div className="reaction-picker-section-title">나만의 커스텀 스티커</div>
                 <div className="reaction-picker-grid">
-                  {allReactions.map((r) => {
+                  {custom.map((r) => {
                     const reactionId = r.key.startsWith('custom:') ? r.key.slice('custom:'.length) : null
                     return (
                       <div key={r.key} className="reaction-picker-cell">
@@ -143,7 +133,7 @@ export default function ReactionBar({ entry, onToggle }) {
                             setOpen(false)
                           }}
                         >
-                          {r.type === 'image' ? <img src={r.value} alt={r.label} /> : r.value}
+                          <img src={r.value} alt={r.label} />
                         </button>
                         {reactionId && (
                           <button
@@ -162,33 +152,25 @@ export default function ReactionBar({ entry, onToggle }) {
                 </div>
 
                 <label className="reaction-upload-btn">
-                  + 이미지로 새 반응 만들기
+                  + 이미지로 새 스티커 만들기
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFilePicked} hidden />
                 </label>
-              </>
-            ) : showEmojiPicker ? (
-              <div className="reaction-emoji-container">
-                <div className="reaction-emoji-header">
-                  <button type="button" className="btn btn-ghost btn-small" onClick={() => setShowEmojiPicker(false)}>
-                    ← 뒤로
-                  </button>
-                  <span className="reaction-emoji-title">이모지 선택</span>
-                </div>
+
+                <div className="reaction-picker-section-title" style={{ marginTop: '12px' }}>기본 이모지</div>
                 <div className="compact-emoji-wrapper">
                   <EmojiPicker
                     onEmojiClick={(emojiData) => {
                       onToggle(emojiData.emoji)
                       setOpen(false)
-                      setShowEmojiPicker(false)
                     }}
                     width={280}
-                    height={320}
+                    height={300}
                     searchPlaceholder="이모지 검색..."
                     skinTonesDisabled
                     navPosition="bottom"
                   />
                 </div>
-              </div>
+              </>
             ) : (
               <form className="reaction-sticker-form" onSubmit={handleConfirmSticker}>
                 <img src={pending.preview} alt="새 반응 미리보기" className="reaction-sticker-preview" />
