@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-16T06:16:48.897Z",
-  "updatedAt": "2026-09-16T06:57:32.056Z",
+  "updatedAt": "2026-09-16T06:57:35.384Z",
   "subEntries": [
     {
       "id": "ef4c1fed-74b0-44d8-9485-0bd7e56e222c",
@@ -28,22 +28,45 @@
         "정병on": true
       },
       "reactions": {
-        "🍀": [
-          "오리너구리",
+        "❤️": [
           "은행"
         ]
       },
-      "comments": [
-        {
-          "id": "64c98a3f-9312-4e19-830a-8426fef850ab",
-          "author": "오리너구리",
-          "text": "대본집나온다고요???아~~~무조건구매해야만ღღ 대본집 독서토론해야되요.",
-          "image": null,
-          "createdAt": "2026-09-16T06:21:57.563Z"
-        }
-      ],
+      "comments": [],
       "createdAt": "2026-09-16T06:16:48.897Z",
-      "updatedAt": "2026-09-16T06:16:51.051Z"
+      "updatedAt": "2026-09-16T06:57:32.056Z",
+      "subEntries": [
+        {
+          "id": "ef4c1fed-74b0-44d8-9485-0bd7e56e222c",
+          "date": "2026-09-16",
+          "author": "keum",
+          "moodTags": [],
+          "content": "대본집 나온대요 보셨나요? 너무 기분이 좋다\n\n별개로 루카 지휘씬에 말 얹는 애들 진짜 개같았는데\n지휘 자문 하신분 인스타 덕에 속 시원해짐",
+          "images": [],
+          "checklist": {
+            "sleepHours": null,
+            "끄적이기": false,
+            "정병on": true
+          },
+          "reactions": {
+            "🍀": [
+              "오리너구리",
+              "은행"
+            ]
+          },
+          "comments": [
+            {
+              "id": "64c98a3f-9312-4e19-830a-8426fef850ab",
+              "author": "오리너구리",
+              "text": "대본집나온다고요???아~~~무조건구매해야만ღღ 대본집 독서토론해야되요.",
+              "image": null,
+              "createdAt": "2026-09-16T06:21:57.563Z"
+            }
+          ],
+          "createdAt": "2026-09-16T06:16:48.897Z",
+          "updatedAt": "2026-09-16T06:16:51.051Z"
+        }
+      ]
     }
   ]
 }
