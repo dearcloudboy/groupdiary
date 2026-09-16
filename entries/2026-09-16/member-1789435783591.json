@@ -15,7 +15,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-16T01:49:25.482Z",
-  "updatedAt": "2026-09-16T03:42:54.104Z",
+  "updatedAt": "2026-09-16T06:00:58.957Z",
   "subEntries": [
     {
       "id": "3bf135fd-cfaa-4adf-acfd-074293fbeba1",
@@ -51,6 +51,13 @@
           "text": "포타...영원히 기다리기.",
           "image": null,
           "createdAt": "2026-09-16T03:42:49.324Z"
+        },
+        {
+          "id": "fa61e03d-2123-4560-9b12-c1fdc0fac4ca",
+          "author": "member-1789435783591",
+          "text": "기달리지마십쇼",
+          "image": null,
+          "createdAt": "2026-09-16T06:00:58.957Z"
         }
       ],
       "createdAt": "2026-09-16T01:49:25.482Z",
