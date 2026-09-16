@@ -15,7 +15,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-16T01:49:25.482Z",
-  "updatedAt": "2026-09-16T01:49:26.970Z",
+  "updatedAt": "2026-09-16T02:34:38.979Z",
   "subEntries": [
     {
       "id": "3bf135fd-cfaa-4adf-acfd-074293fbeba1",
@@ -31,7 +31,11 @@
         "글을썼나요": true,
         "정신병이왔나요": true
       },
-      "reactions": {},
+      "reactions": {
+        "❤️": [
+          "서리"
+        ]
+      },
       "comments": [],
       "createdAt": "2026-09-16T01:49:25.482Z",
       "updatedAt": "2026-09-16T01:49:26.970Z"
