@@ -142,6 +142,7 @@ export default function ReactionBar({ entry, onToggle }) {
                     return (
                       <div key={r.key} className="reaction-picker-cell">
                         <button
+                          key={r.key}
                           type="button"
                           className="reaction-picker-item"
                           title={r.label}
