@@ -8,12 +8,12 @@
   "checklist": {
     "sleepHours": null,
     "연성": false,
-    "정신병": false
+    "정신병": true
   },
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-16T02:49:44.803Z",
-  "updatedAt": "2026-09-16T02:49:46.017Z",
+  "updatedAt": "2026-09-16T02:49:56.863Z",
   "subEntries": [
     {
       "id": "aebdea60-7130-424f-bb72-35b2fc1994f0",
@@ -25,12 +25,12 @@
       "checklist": {
         "sleepHours": null,
         "연성": false,
-        "정신병": false
+        "정신병": true
       },
       "reactions": {},
       "comments": [],
       "createdAt": "2026-09-16T02:49:44.803Z",
-      "updatedAt": "2026-09-16T02:49:46.017Z"
+      "updatedAt": "2026-09-16T02:49:56.863Z"
     }
   ]
 }
