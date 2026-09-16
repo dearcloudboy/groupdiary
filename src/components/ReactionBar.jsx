@@ -72,7 +72,7 @@ export default function ReactionBar({ entry, onToggle }) {
 
   async function handleDeleteCustom(e, reactionId, label) {
     e.stopPropagation()
-    if (!window.confirm(`"${label}" 반응을 삭제할까요? 이미 남긴 반응 기록에서는 사라지지 않고 빈 이미지로 보일 수 있어요.`)) return
+    if (!window.confirm(`"${label}" 반응을 삭제할까요? 이미 남긴 반응 기록에서는 사라지지 않고 빈 이미지로 보일 수 있어요`)) return
     setRemovingCustomId(reactionId)
     try {
       const updated = await removeCustomReaction(auth.client, auth.config, auth.configSha, reactionId)
