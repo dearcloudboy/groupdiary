@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-16T07:31:40.169Z",
-  "updatedAt": "2026-09-16T07:31:55.321Z",
+  "updatedAt": "2026-09-16T08:01:29.597Z",
   "subEntries": [
     {
       "id": "81a6bafd-f243-43d0-b3fd-d6bca6c3c690",
@@ -28,7 +28,15 @@
         "글을쓰자": true
       },
       "reactions": {},
-      "comments": [],
+      "comments": [
+        {
+          "id": "ea7c0593-c1b1-4f3e-bdd2-0538e8ce8d52",
+          "author": "서리",
+          "text": "와 저는 무용체육 97%래요 근데 몸쓰는거 세상에서 제일 못함... 일주로 사주보면 대충 맞긴 하던데 그나저나 연극영화 입시 하셨었다니 저 주변에 하나도 없었어서 너무 신기해요",
+          "image": null,
+          "createdAt": "2026-09-16T08:01:29.596Z"
+        }
+      ],
       "createdAt": "2026-09-16T07:31:40.169Z",
       "updatedAt": "2026-09-16T07:31:55.321Z"
     }
