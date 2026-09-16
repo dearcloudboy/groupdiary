@@ -15,7 +15,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-16T01:49:25.482Z",
-  "updatedAt": "2026-09-16T02:34:38.979Z",
+  "updatedAt": "2026-09-16T02:34:56.565Z",
   "subEntries": [
     {
       "id": "3bf135fd-cfaa-4adf-acfd-074293fbeba1",
@@ -36,7 +36,15 @@
           "서리"
         ]
       },
-      "comments": [],
+      "comments": [
+        {
+          "id": "82e05d9e-e896-4b85-a919-680b0bd7e539",
+          "author": "서리",
+          "text": "와 지금부터 기다려강아지",
+          "image": null,
+          "createdAt": "2026-09-16T02:34:56.565Z"
+        }
+      ],
       "createdAt": "2026-09-16T01:49:25.482Z",
       "updatedAt": "2026-09-16T01:49:26.970Z"
     }
