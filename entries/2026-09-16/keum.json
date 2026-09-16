@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-16T06:16:48.897Z",
-  "updatedAt": "2026-09-16T06:16:51.051Z",
+  "updatedAt": "2026-09-16T06:21:57.564Z",
   "subEntries": [
     {
       "id": "ef4c1fed-74b0-44d8-9485-0bd7e56e222c",
@@ -28,7 +28,15 @@
         "정병on": true
       },
       "reactions": {},
-      "comments": [],
+      "comments": [
+        {
+          "id": "64c98a3f-9312-4e19-830a-8426fef850ab",
+          "author": "오리너구리",
+          "text": "대본집나온다고요???아~~~무조건구매해야만ღღ",
+          "image": null,
+          "createdAt": "2026-09-16T06:21:57.563Z"
+        }
+      ],
       "createdAt": "2026-09-16T06:16:48.897Z",
       "updatedAt": "2026-09-16T06:16:51.051Z"
     }
