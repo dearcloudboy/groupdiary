@@ -43,7 +43,7 @@
     }
   ],
   "createdAt": "2026-09-15T02:58:30.234Z",
-  "updatedAt": "2026-09-15T14:49:51.858Z",
+  "updatedAt": "2026-09-16T01:36:15.278Z",
   "subEntries": [
     {
       "id": "67fdfbe9-42ad-4647-be54-84edc0b473df",
@@ -104,7 +104,11 @@
       "checklist": {
         "sleepHours": null
       },
-      "reactions": {},
+      "reactions": {
+        "❤️": [
+          "서리"
+        ]
+      },
       "comments": [
         {
           "id": "d9af60b8-2e16-4c3f-b217-3e23676adcdd",
