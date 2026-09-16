@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-16T06:16:48.897Z",
-  "updatedAt": "2026-09-16T06:21:57.564Z",
+  "updatedAt": "2026-09-16T06:24:16.788Z",
   "subEntries": [
     {
       "id": "ef4c1fed-74b0-44d8-9485-0bd7e56e222c",
@@ -27,7 +27,11 @@
         "끄적이기": false,
         "정병on": true
       },
-      "reactions": {},
+      "reactions": {
+        "🍀": [
+          "오리너구리"
+        ]
+      },
       "comments": [
         {
           "id": "64c98a3f-9312-4e19-830a-8426fef850ab",
