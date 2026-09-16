@@ -15,7 +15,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-16T01:49:25.482Z",
-  "updatedAt": "2026-09-16T02:34:56.565Z",
+  "updatedAt": "2026-09-16T03:42:49.324Z",
   "subEntries": [
     {
       "id": "3bf135fd-cfaa-4adf-acfd-074293fbeba1",
@@ -43,6 +43,13 @@
           "text": "와 지금부터 기다려강아지",
           "image": null,
           "createdAt": "2026-09-16T02:34:56.565Z"
+        },
+        {
+          "id": "70baf414-7df5-462d-8e1a-9d2e134615b4",
+          "author": "은행",
+          "text": "포타...영원히 기다리기.",
+          "image": null,
+          "createdAt": "2026-09-16T03:42:49.324Z"
         }
       ],
       "createdAt": "2026-09-16T01:49:25.482Z",
