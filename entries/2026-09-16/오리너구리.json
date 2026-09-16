@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-16T07:31:40.169Z",
-  "updatedAt": "2026-09-16T08:22:02.188Z",
+  "updatedAt": "2026-09-16T08:28:27.214Z",
   "subEntries": [
     {
       "id": "81a6bafd-f243-43d0-b3fd-d6bca6c3c690",
@@ -27,7 +27,11 @@
         "성제복복쓰다듬기": true,
         "글을쓰자": true
       },
-      "reactions": {},
+      "reactions": {
+        "👍": [
+          "서리"
+        ]
+      },
       "comments": [
         {
           "id": "ea7c0593-c1b1-4f3e-bdd2-0538e8ce8d52",
