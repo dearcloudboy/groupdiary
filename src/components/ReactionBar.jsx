@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import EmojiPicker from 'emoji-picker-react'
 import { REACTIONS, addCustomReaction, makeCommentId, removeCustomReaction } from '../lib/dataModel.js'
 import { resizeStickerToDataUrl } from '../lib/image.js'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -7,11 +8,26 @@ export default function ReactionBar({ entry, onToggle }) {
   const auth = useAuth()
   const myId = auth.currentMember?.id
   const [open, setOpen] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [pending, setPending] = useState(null) // { file, preview, name }
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const [removingCustomId, setRemovingCustomId] = useState(null)
+  const wrapRef = useRef(null)
   const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    function handleOutside(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+        setOpen(false)
+        setShowEmojiPicker(false)
+        setPending(null)
+        setUploadError(null)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [])
 
   const builtIn = REACTIONS.map((r) => ({ key: r.emoji, label: r.label, type: 'emoji', value: r.emoji }))
   const custom = (auth.config?.customReactions || []).map((r) => ({
@@ -59,7 +75,7 @@ export default function ReactionBar({ entry, onToggle }) {
 
   async function handleDeleteCustom(e, reactionId, label) {
     e.stopPropagation()
-    if (!window.confirm(`"${label}" 반응을 삭제할까요? 이미 남긴 반응 기록에서는 사라지지 않고 빈 이미지로 보일 수 있어요.`)) return
+    if (!window.confirm(`"${label}" 반응을 삭제할까요?`)) return
     setRemovingCustomId(reactionId)
     try {
       const updated = await removeCustomReaction(auth.client, auth.config, auth.configSha, reactionId)
@@ -71,7 +87,7 @@ export default function ReactionBar({ entry, onToggle }) {
   }
 
   return (
-    <div className="reaction-bar">
+    <div className="reaction-bar" ref={wrapRef}>
       {activeReactions.map((r) => {
         const count = entry.reactions?.[r.key]?.length || 0
         const mine = entry.reactions?.[r.key]?.includes(myId)
@@ -90,13 +106,29 @@ export default function ReactionBar({ entry, onToggle }) {
       })}
 
       <div className="reaction-add-wrap">
-        <button type="button" className="reaction-add-btn" onClick={() => setOpen((v) => !v)}>
+        <button
+          type="button"
+          className="reaction-add-btn"
+          onClick={() => {
+            setOpen((v) => !v)
+            setShowEmojiPicker(false)
+            setPending(null)
+          }}
+        >
           + 반응 추가
         </button>
         {open && (
           <div className="reaction-picker">
-            {!pending ? (
+            {!showEmojiPicker && !pending ? (
               <>
+                <button
+                  type="button"
+                  className="reaction-picker-emoji-trigger"
+                  onClick={() => setShowEmojiPicker(true)}
+                >
+                  😀 이모지 피커로 추가하기
+                </button>
+
                 <div className="reaction-picker-grid">
                   {allReactions.map((r) => {
                     const reactionId = r.key.startsWith('custom:') ? r.key.slice('custom:'.length) : null
@@ -106,7 +138,10 @@ export default function ReactionBar({ entry, onToggle }) {
                           type="button"
                           className="reaction-picker-item"
                           title={r.label}
-                          onClick={() => { onToggle(r.key); setOpen(false) }}
+                          onClick={() => {
+                            onToggle(r.key)
+                            setOpen(false)
+                          }}
                         >
                           {r.type === 'image' ? <img src={r.value} alt={r.label} /> : r.value}
                         </button>
@@ -125,16 +160,40 @@ export default function ReactionBar({ entry, onToggle }) {
                     )
                   })}
                 </div>
+
                 <label className="reaction-upload-btn">
                   + 이미지로 새 반응 만들기
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFilePicked} hidden />
                 </label>
               </>
+            ) : showEmojiPicker ? (
+              <div className="reaction-emoji-container">
+                <div className="reaction-emoji-header">
+                  <button type="button" className="btn btn-ghost btn-small" onClick={() => setShowEmojiPicker(false)}>
+                    ← 뒤로
+                  </button>
+                  <span className="reaction-emoji-title">이모지 선택</span>
+                </div>
+                <EmojiPicker
+                  onEmojiClick={(emojiData) => {
+                    onToggle(emojiData.emoji)
+                    setOpen(false)
+                    setShowEmojiPicker(false)
+                  }}
+                  width={320}
+                  height={380}
+                  searchPlaceholder="이모지 검색..."
+                  skinTonesDisabled
+                  navPosition="bottom"
+                />
+              </div>
             ) : (
               <form className="reaction-sticker-form" onSubmit={handleConfirmSticker}>
                 <img src={pending.preview} alt="새 반응 미리보기" className="reaction-sticker-preview" />
                 <input
-                  type="text" placeholder="반응 이름 (예: 최고)" value={pending.name}
+                  type="text"
+                  placeholder="반응 이름 (예: 최고)"
+                  value={pending.name}
                   onChange={(e) => setPending((p) => ({ ...p, name: e.target.value }))}
                   autoFocus
                 />
