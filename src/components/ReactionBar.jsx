@@ -7,7 +7,7 @@ export default function ReactionBar({ entry, onToggle }) {
   const auth = useAuth()
   const myId = auth.currentMember?.id
   const [open, setOpen] = useState(false)
-  const [pending, setPending] = useState(null) // { file, preview, name }
+  const [pending, setPending] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const [removingCustomId, setRemovingCustomId] = useState(null)
