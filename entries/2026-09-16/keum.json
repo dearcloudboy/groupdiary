@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-16T06:16:48.897Z",
-  "updatedAt": "2026-09-16T06:57:35.384Z",
+  "updatedAt": "2026-09-16T07:31:34.154Z",
   "subEntries": [
     {
       "id": "ef4c1fed-74b0-44d8-9485-0bd7e56e222c",
@@ -32,7 +32,15 @@
           "은행"
         ]
       },
-      "comments": [],
+      "comments": [
+        {
+          "id": "9c84ceb1-2743-4978-9520-93f8b1f836ef",
+          "author": "member-1789435783591",
+          "text": "너무너무 기대가되, 못가지면죽음뿐입니다",
+          "image": null,
+          "createdAt": "2026-09-16T07:31:34.154Z"
+        }
+      ],
       "createdAt": "2026-09-16T06:16:48.897Z",
       "updatedAt": "2026-09-16T06:57:32.056Z",
       "subEntries": [
