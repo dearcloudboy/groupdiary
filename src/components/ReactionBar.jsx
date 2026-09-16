@@ -174,18 +174,20 @@ export default function ReactionBar({ entry, onToggle }) {
                   </button>
                   <span className="reaction-emoji-title">이모지 선택</span>
                 </div>
-                <EmojiPicker
-                  onEmojiClick={(emojiData) => {
-                    onToggle(emojiData.emoji)
-                    setOpen(false)
-                    setShowEmojiPicker(false)
-                  }}
-                  width={320}
-                  height={380}
-                  searchPlaceholder="이모지 검색..."
-                  skinTonesDisabled
-                  navPosition="bottom"
-                />
+                <div className="compact-emoji-wrapper">
+                  <EmojiPicker
+                    onEmojiClick={(emojiData) => {
+                      onToggle(emojiData.emoji)
+                      setOpen(false)
+                      setShowEmojiPicker(false)
+                    }}
+                    width={280}
+                    height={320}
+                    searchPlaceholder="이모지 검색..."
+                    skinTonesDisabled
+                    navPosition="bottom"
+                  />
+                </div>
               </div>
             ) : (
               <form className="reaction-sticker-form" onSubmit={handleConfirmSticker}>
