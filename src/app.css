@@ -334,3 +334,78 @@
 }
 .home-nav-icon svg { width: 15px; height: 15px; }
 .home-nav-item.active .home-nav-icon { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+
+/* ==========================================================
+   [추가] 반응 추가 팝업 및 이모지 피커 통합 콤팩트 스타일
+   ========================================================== */
+
+.reaction-add-wrap {
+  position: relative;
+}
+
+.reaction-picker {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  width: 270px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card, 0 10px 25px -5px rgba(0, 0, 0, 0.1));
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--line);
+}
+
+.reaction-picker-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-top: 4px;
+}
+
+/* 이모지 피커 콤팩트 압축 및 하단 확대 미리보기(설명창) 강제 제거 */
+.compact-emoji-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+.compact-emoji-wrapper aside.EmojiPickerReact {
+  --epr-emoji-size: 22px !important;
+  --epr-category-navigation-button-size: 24px !important;
+  --epr-search-input-height: 30px !important;
+  --epr-row-height: 34px !important;
+  width: 100% !important;
+  max-width: 250px !important;
+  height: 240px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* 하단에 크게 확대돼서 뜨는 미리보기(설명) 영역 통째로 숨기기 */
+.compact-emoji-wrapper .epr-preview {
+  display: none !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.compact-emoji-wrapper .epr-body {
+  overflow-x: hidden !important;
+}
+
+.compact-emoji-wrapper .epr-search-container {
+  padding: 4px !important;
+}
+
+.compact-emoji-wrapper .epr-search {
+  padding: 4px 8px !important;
+  font-size: 13px !important;
+  background: var(--surface-sunken) !important;
+  border-radius: var(--radius-md) !important;
+}
