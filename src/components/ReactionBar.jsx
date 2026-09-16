@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import EmojiPicker from 'emoji-picker-react'
 import { REACTIONS, addCustomReaction, makeCommentId, removeCustomReaction } from '../lib/dataModel.js'
 import { resizeStickerToDataUrl } from '../lib/image.js'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -118,7 +117,25 @@ export default function ReactionBar({ entry, onToggle }) {
           <div className="reaction-picker">
             {!pending ? (
               <>
-                <div className="reaction-picker-section-title">나만의 커스텀 스티커</div>
+                <div className="reaction-picker-section-title">기본 이모지</div>
+                <div className="reaction-picker-grid">
+                  {builtIn.map((r) => (
+                    <button
+                      key={r.key}
+                      type="button"
+                      className="reaction-picker-item"
+                      title={r.label}
+                      onClick={() => {
+                        onToggle(r.key)
+                        setOpen(false)
+                      }}
+                    >
+                      {r.value}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="reaction-picker-section-title" style={{ marginTop: '8px' }}>커스텀 스티커</div>
                 <div className="reaction-picker-grid">
                   {custom.map((r) => {
                     const reactionId = r.key.startsWith('custom:') ? r.key.slice('custom:'.length) : null
@@ -151,25 +168,10 @@ export default function ReactionBar({ entry, onToggle }) {
                   })}
                 </div>
 
-                <label className="reaction-upload-btn">
+                <label className="reaction-upload-btn" style={{ marginTop: '6px' }}>
                   + 이미지로 새 스티커 만들기
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFilePicked} hidden />
                 </label>
-
-                <div className="reaction-picker-section-title" style={{ marginTop: '12px' }}>기본 이모지</div>
-                <div className="compact-emoji-wrapper">
-                  <EmojiPicker
-                    onEmojiClick={(emojiData) => {
-                      onToggle(emojiData.emoji)
-                      setOpen(false)
-                    }}
-                    width={280}
-                    height={300}
-                    searchPlaceholder="이모지 검색..."
-                    skinTonesDisabled
-                    navPosition="bottom"
-                  />
-                </div>
               </>
             ) : (
               <form className="reaction-sticker-form" onSubmit={handleConfirmSticker}>
