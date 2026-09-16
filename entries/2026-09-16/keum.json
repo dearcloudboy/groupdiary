@@ -28,7 +28,7 @@
     }
   ],
   "createdAt": "2026-09-16T06:16:48.897Z",
-  "updatedAt": "2026-09-16T10:20:32.944Z",
+  "updatedAt": "2026-09-16T10:21:48.775Z",
   "subEntries": [
     {
       "id": "ef4c1fed-74b0-44d8-9485-0bd7e56e222c",
@@ -109,7 +109,15 @@
         "정병on": true
       },
       "reactions": {},
-      "comments": [],
+      "comments": [
+        {
+          "id": "47091dec-5916-4b46-93c5-b76a1d4ecb64",
+          "author": "member-1789435783591",
+          "text": "ㅠㅠㅠ....... 재밋으셧다면 다행입니다",
+          "image": null,
+          "createdAt": "2026-09-16T10:21:48.775Z"
+        }
+      ],
       "createdAt": "2026-09-16T10:20:26.960Z",
       "updatedAt": "2026-09-16T10:20:32.943Z"
     }
