@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-17T21:59:47.702Z",
-  "updatedAt": "2026-09-17T21:59:51.978Z",
+  "updatedAt": "2026-09-17T22:29:49.195Z",
   "subEntries": [
     {
       "id": "96054a5e-0bb9-437b-937a-1fb680f41ce2",
@@ -28,7 +28,15 @@
         "정신병": false
       },
       "reactions": {},
-      "comments": [],
+      "comments": [
+        {
+          "id": "c5557a5e-67e3-48ce-90fa-a487b1f79b15",
+          "author": "keum",
+          "text": "신청했어용",
+          "image": null,
+          "createdAt": "2026-09-17T22:29:49.195Z"
+        }
+      ],
       "createdAt": "2026-09-17T21:59:47.702Z",
       "updatedAt": "2026-09-17T21:59:51.978Z"
     }
