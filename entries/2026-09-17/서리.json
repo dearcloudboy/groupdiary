@@ -11,9 +11,45 @@
     "정신병": false
   },
   "reactions": {},
-  "comments": [],
+  "comments": [
+    {
+      "id": "2758d02d-0c8a-4b5e-a74e-94975bd4025f",
+      "author": "member-1789435783591",
+      "text": "저는 일단 암것도 모르기때문에, ㅎㅎ;; 하구 싶으신 대로~",
+      "image": null,
+      "createdAt": "2026-09-17T02:44:13.370Z"
+    },
+    {
+      "id": "3fd0d538-eecd-4c33-8152-9d4c8295bfa5",
+      "author": "오리너구리",
+      "text": "전 어디든 조아요~~ 서리님이 안 힘드시다면야 언제든 응원...",
+      "image": null,
+      "createdAt": "2026-09-17T04:02:58.009Z"
+    },
+    {
+      "id": "c8f51df6-a05e-4fa1-a105-6462f01e131b",
+      "author": "은행",
+      "text": "저두 문외한이라 서리님만 괜찮으시다면 얼마든지 좋아요",
+      "image": null,
+      "createdAt": "2026-09-17T04:49:27.624Z"
+    },
+    {
+      "id": "eab8c014-0636-4298-9242-8716e094debb",
+      "author": "keum",
+      "text": "저두 잘 몰라서 ㅎㅎ 서리님이 하자는 대로 따라가는 예스맨이어요",
+      "image": null,
+      "createdAt": "2026-09-17T05:07:50.774Z"
+    },
+    {
+      "id": "0a5b9512-ffbd-472f-9946-092907ccde83",
+      "author": "서리",
+      "text": "그럼 제가 집에가서 사부작..해볼게요",
+      "image": null,
+      "createdAt": "2026-09-17T06:20:51.794Z"
+    }
+  ],
   "createdAt": "2026-09-17T01:47:11.522Z",
-  "updatedAt": "2026-09-17T06:20:51.795Z",
+  "updatedAt": "2026-09-17T13:51:54.250Z",
   "subEntries": [
     {
       "id": "040c4f39-ba35-4142-9142-442547f7c0ca",
@@ -67,6 +103,25 @@
       ],
       "createdAt": "2026-09-17T01:47:11.522Z",
       "updatedAt": "2026-09-17T01:47:18.066Z"
+    },
+    {
+      "id": "4d6c7637-7502-4b6e-ae1e-8a8a5fd6438d",
+      "date": "2026-09-17",
+      "author": "서리",
+      "moodTags": [],
+      "content": "제적성은 연성보다는 이런 쪽인 것 같아요.. 하다보니너무재밌어\n좀만기달려주시기♡",
+      "images": [
+        "images/2026-09-17/서리-1789653112284-entry.png"
+      ],
+      "checklist": {
+        "sleepHours": null,
+        "연성": false,
+        "정신병": true
+      },
+      "reactions": {},
+      "comments": [],
+      "createdAt": "2026-09-17T13:51:50.050Z",
+      "updatedAt": "2026-09-17T13:51:54.250Z"
     }
   ]
 }
