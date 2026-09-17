@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-17T12:54:41.481Z",
-  "updatedAt": "2026-09-17T12:54:41.943Z",
+  "updatedAt": "2026-09-17T13:31:44.665Z",
   "subEntries": [
     {
       "id": "a31839fd-4999-4a72-bbb8-e4bbdff37511",
@@ -28,7 +28,15 @@
         "글을쓰자": false
       },
       "reactions": {},
-      "comments": [],
+      "comments": [
+        {
+          "id": "83615966-6d32-436d-8d1f-e1f1a2f3fac8",
+          "author": "서리",
+          "text": "아 저만 아무것도 안하고있군요,, 하지만 힘내세요 다 쓰고 나면 분명 재미있을거야",
+          "image": null,
+          "createdAt": "2026-09-17T13:31:44.665Z"
+        }
+      ],
       "createdAt": "2026-09-17T12:54:41.481Z",
       "updatedAt": "2026-09-17T12:54:41.943Z"
     }
