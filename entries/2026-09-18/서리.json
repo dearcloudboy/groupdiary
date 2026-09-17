@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-17T21:59:47.702Z",
-  "updatedAt": "2026-09-17T22:29:49.195Z",
+  "updatedAt": "2026-09-17T23:08:17.721Z",
   "subEntries": [
     {
       "id": "96054a5e-0bb9-437b-937a-1fb680f41ce2",
@@ -35,6 +35,13 @@
           "text": "신청했어용",
           "image": null,
           "createdAt": "2026-09-17T22:29:49.195Z"
+        },
+        {
+          "id": "c6ca18dd-0960-4ab8-b655-f3d3ac668aa0",
+          "author": "서리",
+          "text": "승인했어용",
+          "image": null,
+          "createdAt": "2026-09-17T23:08:17.721Z"
         }
       ],
       "createdAt": "2026-09-17T21:59:47.702Z",
