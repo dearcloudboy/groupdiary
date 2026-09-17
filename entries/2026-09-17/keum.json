@@ -13,7 +13,7 @@
   "reactions": {},
   "comments": [],
   "createdAt": "2026-09-17T00:42:04.558Z",
-  "updatedAt": "2026-09-17T00:42:09.277Z",
+  "updatedAt": "2026-09-17T01:46:18.786Z",
   "subEntries": [
     {
       "id": "133e06eb-2ed4-46ba-b505-4d2e84e1f6e6",
@@ -28,7 +28,15 @@
         "정병on": true
       },
       "reactions": {},
-      "comments": [],
+      "comments": [
+        {
+          "id": "6084993f-900b-43e1-8927-a59cde2eb113",
+          "author": "서리",
+          "text": "오 저도 생각해봐야겠어요",
+          "image": null,
+          "createdAt": "2026-09-17T01:46:18.786Z"
+        }
+      ],
       "createdAt": "2026-09-17T00:42:04.558Z",
       "updatedAt": "2026-09-17T00:42:09.277Z"
     }
